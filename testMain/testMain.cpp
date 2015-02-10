@@ -13,6 +13,8 @@ void test_SortShowItems();
 void test_GetSameFiles();
 void test_GetMoreFiles();
 
+void getFiles();
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	CallBackFun("ttt", "xxx");
@@ -21,7 +23,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::string pg = "pgroup";
 
-	test_GetMoreFiles();
+	//test_GetMoreFiles();
+
+	getFiles();
 	
 	Sleep(20000);
 	return 0;
@@ -195,4 +199,110 @@ void test_GetMoreFiles()
 	msg = msg + "Value=yyy(E:)";
 	postMessageToService("SetPartitionMulSel", msg.c_str());
 	Sleep(20000);
+}
+
+#include <winioctl.h>
+
+#define BUF_LEN 4096
+
+void getFiles()
+{
+	//EnumUsnRecord("E");
+	HANDLE hVol;
+	CHAR Buffer[BUF_LEN];
+
+	USN_JOURNAL_DATA JournalData;
+	READ_USN_JOURNAL_DATA ReadData = {0, 0xFFFFFFFF, 1, 0, 0};
+	PUSN_RECORD UsnRecord;  
+
+	DWORD dwBytes;
+	DWORD dwRetBytes;
+	int I;
+
+	hVol = CreateFile( TEXT("\\\\.\\C:"), 
+		GENERIC_READ | GENERIC_WRITE, 
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		OPEN_EXISTING,
+		0,
+		NULL);
+
+	if( hVol == INVALID_HANDLE_VALUE )
+	{
+		printf("CreateFile failed (%d)\n", GetLastError());
+		return;
+	}
+
+	if( !DeviceIoControl( hVol, 
+		FSCTL_QUERY_USN_JOURNAL, 
+		NULL,
+		0,
+		&JournalData,
+		sizeof(JournalData),
+		&dwBytes,
+		NULL) )
+	{
+		printf( "Query journal failed (%d)\n", GetLastError());
+		return;
+	}
+
+	ReadData.StartUsn = JournalData.NextUsn;
+	ReadData.UsnJournalID = JournalData.UsnJournalID;
+
+	DWORD     ReasonMask = 0;
+	ReadData.ReasonMask = USN_REASON_FILE_CREATE | USN_REASON_FILE_DELETE | USN_REASON_RENAME_OLD_NAME | USN_REASON_RENAME_NEW_NAME;
+	ReadData.Timeout = 5;
+	ReadData.BytesToWaitFor = BUF_LEN;
+
+	printf( "Journal ID: %I64x\n", JournalData.UsnJournalID );
+	printf( "FirstUsn: %I64x\n\n", JournalData.FirstUsn );
+
+	for(I=0; I<=10; I++)
+	{
+		memset( Buffer, 0, BUF_LEN );
+
+		if( !DeviceIoControl( hVol, 
+			FSCTL_READ_USN_JOURNAL, 
+			&ReadData,
+			sizeof(ReadData),
+			&Buffer,
+			BUF_LEN,
+			&dwBytes,
+			NULL) )
+		{
+			printf( "Read journal failed (%d)\n", GetLastError());
+			return;
+		}
+
+		dwRetBytes = dwBytes - sizeof(USN);
+
+		// Find the first record
+		UsnRecord = (PUSN_RECORD)(((PUCHAR)Buffer) + sizeof(USN));  
+
+		printf( "****************************************\n");
+
+		// This loop could go on for a long time, given the current buffer size.
+		while( dwRetBytes > 0 )
+		{
+			printf( "USN: %I64x\n", UsnRecord->Usn );
+			printf( "FileReferenceNumber: %I64x\n", UsnRecord->FileReferenceNumber);
+			printf( "ParentFileReferenceNumber: %I64x\n", UsnRecord->ParentFileReferenceNumber);
+			printf("File name: %.*S\n", 
+				UsnRecord->FileNameLength/2, 
+				UsnRecord->FileName );
+			printf( "Reason: %x\n", UsnRecord->Reason );
+			printf( "TimeStamp: %d\n", UsnRecord->TimeStamp.QuadPart / 1000 / 1000 / 1000 );
+			printf( "\n" );
+
+			dwRetBytes -= UsnRecord->RecordLength;
+
+			// Find the next record
+			UsnRecord = (PUSN_RECORD)(((PCHAR)UsnRecord) + 
+				UsnRecord->RecordLength); 
+		}
+		// Update starting USN for next call
+		ReadData.StartUsn = *(USN *)&Buffer; 
+	}
+
+	CloseHandle(hVol);
 }
