@@ -40,7 +40,7 @@ namespace FileComparer
             //WinHelper.sendKeysMessage("notepad++", (IntPtr)(Keys.Alt | Keys.F));
             //WinHelper.sendKeysMessage("notepad++", (IntPtr)( Keys.O));
 
-            this.Size = new Size(1000, 600);
+            this.Size = new Size(1024, 600);
             this.CurrentTimeLab.Text = "";
             m_configs = new ConfigParser();
             m_configs.parseFile(@"configUI.xml");
@@ -65,8 +65,6 @@ namespace FileComparer
             this.partitionMulSel2.Name = GlobalValues.PartitionGroupName2;
             this.partitionMulSel1.Init(GlobalValues.PartitionGroupName1, this);
             this.partitionMulSel2.Init(GlobalValues.PartitionGroupName2, this);
-
-
 
             m_parttGroup = new BtnManager(this.mainPanel);
 

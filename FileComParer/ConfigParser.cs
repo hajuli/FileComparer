@@ -38,6 +38,7 @@ namespace FileComparer
 
         // parameter name.---------------
         public static string PN_MessageValue		= "Value";
+        public static string PN_MessageValue2       = "Value2";
         public static string PN_PartitionGroup		= "ParttGroup";
         public static string PN_ShowName			= "ShowName";
         public static string PN_ShowType            = "ShowType";
@@ -55,6 +56,8 @@ namespace FileComparer
         public static string MSG_CancelLoadVolume   = "CancelLoadVolume";       //PN_PartitionGroup
         public static string MSG_UpdateSelectCondition = "UpdateSelectCondition";   //PN_ShowName, PN_MessageValue
         public static string MSG_SortShowItems          = "SortShowItems";      //PN_ShowName,PN_MessageValue
+        public static string MSG_ShowMoreItems          = "ShowMoreItems";      //PN_ShowName
+        public static string MSG_GetSameFileAllPaths    = "GetSameFileAllPaths";//PN_ShowName,PN_MessageValue       // split by ';'
 
         //msg: to ui--------------------
         public static string MSG_UpdateShowedNums = "UpdateShowedNums";   //PN_ShowName, PN_MessageValue
@@ -111,9 +114,7 @@ namespace FileComparer
         public static string LoadAllVolumeIDs       = "LoadAllVolumeIDs";
         public static string SetCurrentShow         = "SetCurrentShow";
         public static string SetPartitionMulSel     = "SetPartitionMulSel"; //like:ParttGroup=ParttGroup1/Value=(D:) D, (E:) E
-        public static string ShowMoreItems          = "ShowMoreItems";
-        public static string SortShowItems          = "SortShowItems";   //column name.
-        public static string GetSameFileAllPaths    = "GetSameFileAllPaths";   // split by ';'
+        
         public static string CancelLoadVolume       = "CancelLoadVolume";
 
         //----------------------to ui.

@@ -69,6 +69,17 @@ namespace FileComparer
                 m_showNumsLabel.Text = "showed " + MessageTypes.getAttributeValue(GlobalValues.PN_MessageValue, msg) + " objects";
                 return;
             }
+            else if (MessageTypes.ShowSameFileAllPaths == msgType)
+            {
+                string name = MessageTypes.getAttributeValue(GlobalValues.PN_MessageValue, msg);
+                string paths = MessageTypes.getAttributeValue(GlobalValues.PN_MessageValue2, msg);
+                UserListView ulv = new UserListView();
+                if (ulv.showPaths(name, paths))
+                {
+                    ulv.Show();
+                }
+                return;
+            }
             m_UDGVRef.processMessages(msgType, msg);
         }
     }

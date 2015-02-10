@@ -34,6 +34,7 @@ static const std::string UiName_SameFiles	= "SameFiles";
 
 // msg para names
 static const std::string PN_MessageValue		= "Value";
+static const std::string PN_MessageValue2		= "Value2";
 static const std::string PN_PartitionGroup		= "ParttGroup";
 static const std::string PN_ShowName			= "ShowName";	//need be unique.
 static const std::string PN_ShowType			= "ShowType";	//[AllFiles, SameFiles, MoreFiles]
@@ -75,9 +76,7 @@ enum MessageTypes{
 	MSG_ShowFileList,
 	MSG_UpdateSelectCondition,	//PN_ShowName, PN_MessageValue, 
 	MSG_SortFileList,			//PN_ShowName, PN_MessageValue, 
-	MSG_ShowMoreItems,
-	MSG_ShowSameFileList,
-	MSG_ShowMoreSameItems,
+	MSG_ShowMoreItems,			//PN_ShowName,
 	MSG_GetSameFileAllPaths,	//PN_ShowName, PN_MessageValue,
 	MSG_SetLoadVolume,
 	MSG_FindSameFile,

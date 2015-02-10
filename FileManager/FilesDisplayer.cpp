@@ -466,16 +466,18 @@ void SameFilesDisplayer::getSameFileAllPaths(std::string msg)
 	{
 		std::string paths = "";
 		NodeItem* p = m_sameFilesSelected[index]->head;
+		std::string name = p->value->Name;
 		while (p)
 		{
 			if (paths.length() > 0)
 				paths = paths + ";";
-			paths = paths + p->value->Name;
-			paths = paths + MessageSplitSign;
 			paths = paths + p->value->path;
 			p = p->next;
 		}
-		m_notifyFunc(cmdShowSameFileAllPaths.c_str(), paths.c_str());
+		std::string msg = PN_ShowName + "=" + m_name + MessageSplitSign;
+		msg = msg + PN_MessageValue + "=" + name;
+		msg = msg + MessageSplitSign + PN_MessageValue2 + "=" + paths;
+		m_notifyFunc(cmdShowSameFileAllPaths.c_str(), msg.c_str());
 	}
 }
 

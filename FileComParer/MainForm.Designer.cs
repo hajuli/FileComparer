@@ -41,14 +41,14 @@ namespace FileComparer
             this.sameFilesBtn2 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
             this.mainPanel = new System.Windows.Forms.Panel();
-            this.partitionMulSel1 = new FileComparer.MultiSelComboBox();
             this.partitionMulSel2 = new FileComparer.MultiSelComboBox();
+            this.partitionMulSel1 = new FileComparer.MultiSelComboBox();
             this.SuspendLayout();
             // 
             // CurrentTimeLab
             // 
             this.CurrentTimeLab.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.CurrentTimeLab.Location = new System.Drawing.Point(822, 598);
+            this.CurrentTimeLab.Location = new System.Drawing.Point(822, 532);
             this.CurrentTimeLab.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.CurrentTimeLab.Name = "CurrentTimeLab";
             this.CurrentTimeLab.Size = new System.Drawing.Size(168, 16);
@@ -58,7 +58,7 @@ namespace FileComparer
             // FormStatusLabel
             // 
             this.FormStatusLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.FormStatusLabel.Location = new System.Drawing.Point(9, 598);
+            this.FormStatusLabel.Location = new System.Drawing.Point(9, 532);
             this.FormStatusLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.FormStatusLabel.Name = "FormStatusLabel";
             this.FormStatusLabel.Size = new System.Drawing.Size(667, 16);
@@ -80,10 +80,10 @@ namespace FileComparer
             // 
             this.allFilesBtn1.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.allFilesBtn1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.allFilesBtn1.Location = new System.Drawing.Point(13, 3);
+            this.allFilesBtn1.Location = new System.Drawing.Point(26, 2);
             this.allFilesBtn1.Margin = new System.Windows.Forms.Padding(4);
             this.allFilesBtn1.Name = "allFilesBtn1";
-            this.allFilesBtn1.Size = new System.Drawing.Size(104, 28);
+            this.allFilesBtn1.Size = new System.Drawing.Size(110, 28);
             this.allFilesBtn1.TabIndex = 7;
             this.allFilesBtn1.Text = "button1";
             this.allFilesBtn1.UseVisualStyleBackColor = false;
@@ -92,10 +92,10 @@ namespace FileComparer
             // 
             this.sameFilesBtn1.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.sameFilesBtn1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.sameFilesBtn1.Location = new System.Drawing.Point(125, 4);
+            this.sameFilesBtn1.Location = new System.Drawing.Point(173, 3);
             this.sameFilesBtn1.Margin = new System.Windows.Forms.Padding(4);
             this.sameFilesBtn1.Name = "sameFilesBtn1";
-            this.sameFilesBtn1.Size = new System.Drawing.Size(104, 28);
+            this.sameFilesBtn1.Size = new System.Drawing.Size(120, 28);
             this.sameFilesBtn1.TabIndex = 7;
             this.sameFilesBtn1.Text = "button1";
             this.sameFilesBtn1.UseVisualStyleBackColor = false;
@@ -104,10 +104,10 @@ namespace FileComparer
             // 
             this.allFilesBtn2.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.allFilesBtn2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.allFilesBtn2.Location = new System.Drawing.Point(13, 39);
+            this.allFilesBtn2.Location = new System.Drawing.Point(26, 38);
             this.allFilesBtn2.Margin = new System.Windows.Forms.Padding(4);
             this.allFilesBtn2.Name = "allFilesBtn2";
-            this.allFilesBtn2.Size = new System.Drawing.Size(104, 28);
+            this.allFilesBtn2.Size = new System.Drawing.Size(110, 28);
             this.allFilesBtn2.TabIndex = 7;
             this.allFilesBtn2.Text = "button1";
             this.allFilesBtn2.UseVisualStyleBackColor = false;
@@ -116,10 +116,10 @@ namespace FileComparer
             // 
             this.button4.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button4.Location = new System.Drawing.Point(616, 5);
+            this.button4.Location = new System.Drawing.Point(737, 5);
             this.button4.Margin = new System.Windows.Forms.Padding(4);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(104, 28);
+            this.button4.Size = new System.Drawing.Size(110, 28);
             this.button4.TabIndex = 7;
             this.button4.Text = "button1";
             this.button4.UseVisualStyleBackColor = false;
@@ -128,10 +128,10 @@ namespace FileComparer
             // 
             this.moreFilesBtn1.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.moreFilesBtn1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.moreFilesBtn1.Location = new System.Drawing.Point(248, 5);
+            this.moreFilesBtn1.Location = new System.Drawing.Point(331, 3);
             this.moreFilesBtn1.Margin = new System.Windows.Forms.Padding(4);
             this.moreFilesBtn1.Name = "moreFilesBtn1";
-            this.moreFilesBtn1.Size = new System.Drawing.Size(104, 26);
+            this.moreFilesBtn1.Size = new System.Drawing.Size(118, 26);
             this.moreFilesBtn1.TabIndex = 7;
             this.moreFilesBtn1.Text = "button1";
             this.moreFilesBtn1.UseVisualStyleBackColor = false;
@@ -140,10 +140,10 @@ namespace FileComparer
             // 
             this.moreFilesBtn2.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.moreFilesBtn2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.moreFilesBtn2.Location = new System.Drawing.Point(248, 39);
+            this.moreFilesBtn2.Location = new System.Drawing.Point(331, 37);
             this.moreFilesBtn2.Margin = new System.Windows.Forms.Padding(4);
             this.moreFilesBtn2.Name = "moreFilesBtn2";
-            this.moreFilesBtn2.Size = new System.Drawing.Size(104, 28);
+            this.moreFilesBtn2.Size = new System.Drawing.Size(118, 28);
             this.moreFilesBtn2.TabIndex = 7;
             this.moreFilesBtn2.Text = "button1";
             this.moreFilesBtn2.UseVisualStyleBackColor = false;
@@ -152,10 +152,10 @@ namespace FileComparer
             // 
             this.sameFilesBtn2.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.sameFilesBtn2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.sameFilesBtn2.Location = new System.Drawing.Point(125, 39);
+            this.sameFilesBtn2.Location = new System.Drawing.Point(173, 38);
             this.sameFilesBtn2.Margin = new System.Windows.Forms.Padding(4);
             this.sameFilesBtn2.Name = "sameFilesBtn2";
-            this.sameFilesBtn2.Size = new System.Drawing.Size(104, 28);
+            this.sameFilesBtn2.Size = new System.Drawing.Size(120, 28);
             this.sameFilesBtn2.TabIndex = 7;
             this.sameFilesBtn2.Text = "button1";
             this.sameFilesBtn2.UseVisualStyleBackColor = false;
@@ -164,33 +164,20 @@ namespace FileComparer
             // 
             this.button8.BackColor = System.Drawing.Color.DeepSkyBlue;
             this.button8.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button8.Location = new System.Drawing.Point(616, 39);
+            this.button8.Location = new System.Drawing.Point(737, 39);
             this.button8.Margin = new System.Windows.Forms.Padding(4);
             this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(104, 28);
+            this.button8.Size = new System.Drawing.Size(110, 28);
             this.button8.TabIndex = 7;
             this.button8.Text = "button1";
             this.button8.UseVisualStyleBackColor = false;
             // 
             // mainPanel
             // 
-            this.mainPanel.Location = new System.Drawing.Point(13, 75);
+            this.mainPanel.Location = new System.Drawing.Point(3, 75);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(977, 451);
+            this.mainPanel.Size = new System.Drawing.Size(1000, 454);
             this.mainPanel.TabIndex = 11;
-            // 
-            // partitionMulSel1
-            // 
-            this.partitionMulSel1.FormattingEnabled = true;
-            this.partitionMulSel1.IntegralHeight = false;
-            this.partitionMulSel1.Items.AddRange(new object[] {
-            "abc",
-            "xxx",
-            "efff"});
-            this.partitionMulSel1.Location = new System.Drawing.Point(382, 3);
-            this.partitionMulSel1.Name = "partitionMulSel1";
-            this.partitionMulSel1.Size = new System.Drawing.Size(173, 24);
-            this.partitionMulSel1.TabIndex = 10;
             // 
             // partitionMulSel2
             // 
@@ -200,17 +187,30 @@ namespace FileComparer
             "abc",
             "xxx",
             "efff"});
-            this.partitionMulSel2.Location = new System.Drawing.Point(382, 39);
+            this.partitionMulSel2.Location = new System.Drawing.Point(487, 41);
             this.partitionMulSel2.Name = "partitionMulSel2";
             this.partitionMulSel2.Size = new System.Drawing.Size(173, 24);
             this.partitionMulSel2.TabIndex = 10;
+            // 
+            // partitionMulSel1
+            // 
+            this.partitionMulSel1.FormattingEnabled = true;
+            this.partitionMulSel1.IntegralHeight = false;
+            this.partitionMulSel1.Items.AddRange(new object[] {
+            "abc",
+            "xxx",
+            "efff"});
+            this.partitionMulSel1.Location = new System.Drawing.Point(487, 5);
+            this.partitionMulSel1.Name = "partitionMulSel1";
+            this.partitionMulSel1.Size = new System.Drawing.Size(173, 24);
+            this.partitionMulSel1.TabIndex = 10;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.LightSkyBlue;
-            this.ClientSize = new System.Drawing.Size(1006, 621);
+            this.ClientSize = new System.Drawing.Size(1006, 555);
             this.Controls.Add(this.mainPanel);
             this.Controls.Add(this.partitionMulSel2);
             this.Controls.Add(this.partitionMulSel1);
@@ -227,6 +227,7 @@ namespace FileComparer
             this.Controls.Add(this.CurrentTimeLab);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(1024, 600);
             this.Name = "MainForm";
             this.Text = "MainForm";
             this.ResumeLayout(false);

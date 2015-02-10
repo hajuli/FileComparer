@@ -60,8 +60,7 @@ namespace FileComparer
             //WinHelper.ShowFileProperties(info.Item.SubItems[1].Text);
             WinHelper.openExplorer(info.Item.SubItems[1].Text);
         }
-
-        public bool showPaths(string paths)
+        public bool showPaths_old(string paths)
         {
             bool ret = false;
             char[] cs = new char[1];
@@ -88,6 +87,30 @@ namespace FileComparer
                     }
                     ret = true;
                 }
+            }
+            return ret;
+        }
+        public bool showPaths(string name, string paths)
+        {
+            bool ret = false;
+            char[] cs = new char[1];
+            cs[0] = ';';
+            string[] files = paths.Split(cs);
+            for (int i = 0; i < files.Length; ++i)
+            {
+                ListViewItem it = new ListViewItem();
+                it.Text = name;
+                it.SubItems.Add(files[i]);
+                it.ImageIndex = i;
+                listView1.Items.Add(it);
+
+                listView1.SmallImageList.Images.Add(SystemIcon.getPathIcon(files[i]));
+                if (false == ret)
+                {
+                    m_form.Icon = SystemIcon.getPathIcon(files[i]);
+                    m_form.Text = name;
+                }
+                ret = true;
             }
             return ret;
         }

@@ -178,7 +178,10 @@ namespace FileComparer
             int n = this.DisplayedRowCount(false);
             if (this.FirstDisplayedScrollingRowIndex + n >= this.Rows.Count)
             {
-                GlobalValues.ServiceHandle.sendMessage(MessageTypes.ShowMoreItems, "tabName=" + m_config.m_tableName);
+                string msg = GlobalValues.PN_ShowName + MessageTypes.MessageAttibuteSplitSign + m_name
+                    + MessageTypes.MessageSplitSign
+                    + GlobalValues.PN_MessageValue + MessageTypes.MessageAttibuteSplitSign + "morrre";
+                GlobalValues.ServiceHandle.sendMessage(GlobalValues.MSG_ShowMoreItems, msg);
             }
         }
 
@@ -230,8 +233,12 @@ namespace FileComparer
                 return;
             if (GlobalValues.SameFilesTableName == this.m_config.m_tableName)
             {
-                GlobalValues.ServiceHandle.sendMessage(MessageTypes.GetSameFileAllPaths,
-                    this.Rows[e.RowIndex].Cells[this.Columns[MessageTypes.UniIDColumnName].Index].Value.ToString());
+                string msg = GlobalValues.PN_ShowName + MessageTypes.MessageAttibuteSplitSign + m_name
+                    + MessageTypes.MessageSplitSign
+                    + GlobalValues.PN_MessageValue + MessageTypes.MessageAttibuteSplitSign + 
+                    this.Rows[e.RowIndex].Cells[this.Columns[MessageTypes.UniIDColumnName].Index].Value.ToString();
+
+                GlobalValues.ServiceHandle.sendMessage(GlobalValues.MSG_GetSameFileAllPaths, msg);
                 return;
             }
             //WinHelper.ShowFileProperties(this.Rows[e.RowIndex].Cells[this.Columns["path"].Index].Value.ToString());

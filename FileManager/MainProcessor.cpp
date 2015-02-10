@@ -24,8 +24,6 @@ m_currentShowName(DefaultInitString)
 	m_nextMessage[MSG_UpdateSelectCondition] = MSG_ShowFileList;
 	m_nextMessage[MSG_SortFileList] = MSG_ShowFileList;
 	m_nextMessage[MSG_ShowMoreItems] = MSG_None;
-	m_nextMessage[MSG_ShowSameFileList] = MSG_None;
-	m_nextMessage[MSG_ShowMoreSameItems] = MSG_None;
 	m_nextMessage[MSG_GetSameFileAllPaths] = MSG_None;
 	m_nextMessage[MSG_SetLoadVolume] = MSG_None;
 	m_nextMessage[MSG_FindSameFile] = MSG_None;
@@ -89,12 +87,7 @@ int MainProcessor::svc()
 		}
 		else if (MSG_ShowMoreItems == msg.type)
 		{
-		}
-		else if (MSG_ShowSameFileList == msg.type)
-		{
-		}
-		else if (MSG_ShowMoreSameItems == msg.type)
-		{
+			showFileList(msg);
 		}
 		else if (MSG_GetSameFileAllPaths == msg.type)
 		{
