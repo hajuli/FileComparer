@@ -1,0 +1,40 @@
+confige file:configUI.xml
+
+load the volume label:load_disk_volume, value like "E:"
+just support one volume.
+
+support alt+enter to show file's properties.
+
+
+---------------
+20141028 update, new version: 1.0.4.1
+support Alt+D and Ctrl+F to focus to select condition textbox.
+
+---------------
+20141027 update open size. new version: 1.0.3.1
+
+when start update form open size (1000, 600).
+
+------------
+20141025 fix bug.
+
+when read my removable hard disk, coming to a endless loop.
+new code in file diskReader.cpp like:
+
+for (pal = PATTRIBUTE_LIST (pBuffferRead);
+                    pal->AttributeType != AttributeData;
+                    pal = PATTRIBUTE_LIST (PBYTE (pal) + pal->Length)
+                )
+			{
+				++intimes;
+				if (oldPal == pal)
+				{
+					break;
+				}
+				oldPal = pal;
+			}
+
+
+new version: 1.0.2.1
+-------------------
+
