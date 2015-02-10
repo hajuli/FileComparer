@@ -40,6 +40,7 @@ void FilesDisplayer::show()
 {
 	prepareData();
 	selectFiles();
+	printf("now select condition is:%s\n", m_selectCondition.c_str());
 	showDetail();
 }
 

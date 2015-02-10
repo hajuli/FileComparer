@@ -189,4 +189,10 @@ void test_GetMoreFiles()
 	msg = msg + "Value=SIZE";
 	postMessageToService("SortShowItems", msg.c_str());
 	Sleep(2000);
+
+	msg = "ParttGroup=" + cmpPg;
+	msg = msg + MessageSplitSign;
+	msg = msg + "Value=yyy(E:)";
+	postMessageToService("SetPartitionMulSel", msg.c_str());
+	Sleep(20000);
 }

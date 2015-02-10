@@ -38,7 +38,8 @@ PartitionGroup::~PartitionGroup()
 
 void PartitionGroup::reSetData()
 {
-	static char* buf = "destroy loaded items.";
+	char buf[500];
+	sprintf(buf, "destroy loaded %d items.", m_fileList.size());
 	m_notifyFunc(cmdShowStatusMessage.c_str(), buf);
 	FileInfo* p = (FileInfo*)m_fileList.pop();
 	while (p)
@@ -219,6 +220,8 @@ int PartitionGroup::getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles, int up
 	{
 		return updateId;
 	}
+	//just samplely clear;
+	allFiles.clear();
 	FileInfo* p = (FileInfo*)m_fileList.head();
 	while (p)
 	{
