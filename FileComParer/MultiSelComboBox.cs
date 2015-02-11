@@ -143,7 +143,7 @@ namespace FileComparer
                 if (this.checkedValues.ContainsKey(this.itemsList[i]))
                 {
                     if ("" != text)
-                        text = text + ", ";
+                        text = text + "; ";
                     text = text + this.itemsList[i];
                 }
             }
