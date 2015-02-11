@@ -13,23 +13,10 @@
 
 PartitionGroup::PartitionGroup(std::string name):
 m_name(name),
-m_bRunning(false),
-m_semaphore(0),
-m_queueLock(NULL),
 m_updateId(0),
 m_diskReader("", this)
 {
 	m_fileList.cleanUp();
-	m_msgList.clear();
-
-	m_selectedFiles.clear();
-	m_ShowedItemCount = 0;
-
-	m_selectCondition = SelectedConditionDefault;
-	m_newSelectCondition = "";
-
-
-	//m_findSameFileThread = new ThreadWorker(this);
 }
 
 PartitionGroup::~PartitionGroup()
@@ -48,7 +35,6 @@ void PartitionGroup::reSetData()
 		p = (FileInfo*)m_fileList.pop();
 	}
 	m_fileList.cleanUp();
-	m_msgList.clear();
 	
 	++m_updateId;
 
@@ -66,11 +52,25 @@ void PartitionGroup::loadVolumeFiles(std::string volume)
 	std::vector<std::string> ids;
 	if (VolumeAllIDs == volume)
 	{
-		m_diskReader.loadAllVolumeIDs(ids);
+		DiskMonitor::loadAllVolumeIDs(ids);
 	}
 	else
 	{
-		ids.push_back(volume);
+		int i = 0;
+		while ( i < volume.size())
+		{
+			if(std::string::npos != volume.find(";", i))
+			{
+				int j = volume.find(";", i);
+				ids.push_back(volume.substr(i, j - i));
+				i = j + 1;
+			}
+			else
+			{
+				ids.push_back(volume.substr(i));
+				break;
+			}
+		}
 	}
 	char buf[500];
 	std::string showVol = "";
@@ -83,6 +83,11 @@ void PartitionGroup::loadVolumeFiles(std::string volume)
 			vol = vol.substr(vol.find("(") + 1);
 			vol = vol.substr(0, vol.find(")"));
 		}
+		else
+		{
+			printf("error, not find (x:) from string %s\n", vol);
+			continue;
+		}
 		sprintf(buf, "start loading files from volume %s", vol.c_str());
 		m_notifyFunc(cmdShowStatusMessage.c_str(), buf);
 
@@ -90,6 +95,8 @@ void PartitionGroup::loadVolumeFiles(std::string volume)
 	
 		DuLinkList files;
 		m_diskReader.EnumUsnRecord(vol.c_str(), files);
+		m_diskReader.startProcess();
+
 		constructFileFullPath(files);
 
 		FileInfo* p = (FileInfo*)files.pop();
@@ -178,42 +185,6 @@ void PartitionGroup::constructFileFullPath(DuLinkList& files)
 	}
 }
 
-void PartitionGroup::showFileList(int fromIndex)
-{
-	char buf[1024] = {0};
-	sprintf(buf, "tabName=%s%s", UiTabName_showAllFiles.c_str(), MessageSplitSign.c_str());
-	if (0 == fromIndex)
-	{
-		m_notifyFunc(cmdFileListItemClear.c_str(), buf);
-	}
-	int i = 0, j = 0, nSize = m_selectedFiles.size();
-	for (i = fromIndex, j = 0; i < nSize && j < SHOW_FILE_ITEM_NUM; ++i, ++j)
-	{
-		FileInfo& f = *m_selectedFiles[i];
-		SYSTEMTIME cDate;
-		FileTimeToSystemTime(&f.createDate, &cDate);
-		SYSTEMTIME mDate;
-		FileTimeToSystemTime(&f.modifyDate, &mDate);
-		SYSTEMTIME lwDate;
-		FileTimeToSystemTime(&f.lastAccessTime, &lwDate);
-		memset(buf, 0, 1024);
-		sprintf(buf,
-			"tabName=%s,.., RowRefIndex=%I64u,.., ParentRefNum=%I64u,.., ParentRefNo=%I64u,.., name=%s,.., FileAttributes=%d,.., size=%s,.., createDate=%d-%02d-%02d %02d:%02d:%02d,.., modifyDate=%d-%02d-%02d %02d:%02d:%02d,.., lastAccessDate=%d-%02d-%02d %02d:%02d:%02d,.., path=%s,..,",
-			UiTabName_showAllFiles.c_str(),
-			f.FileRefNo, f.ParentRefNo, f.ParentRefNo, f.Name.c_str(), f.FileAttributes, f.fileSizeAsString(),
-			cDate.wYear, cDate.wMonth, cDate.wDay, cDate.wHour, cDate.wMinute, cDate.wSecond,
-			mDate.wYear, mDate.wMonth, mDate.wDay, mDate.wHour, mDate.wMinute, mDate.wSecond,
-			lwDate.wYear, lwDate.wMonth, lwDate.wDay, lwDate.wHour, lwDate.wMinute, lwDate.wSecond,
-			f.path.c_str()); 
-		m_notifyFunc(cmdFileListItemAdd.c_str(), buf);
-	}
-	m_ShowedItemCount = i;
-	memset(buf, 0, 1024);
-	sprintf(buf, "tabName=%s,.., value=%d / %d", UiTabName_showAllFiles.c_str(), m_ShowedItemCount, nSize);
-	m_notifyFunc(cmdUpdateShowedNums.c_str(), buf);
-}
-
-
 int PartitionGroup::getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles, int updateId)
 {
 	if (updateId == m_updateId)
@@ -251,5 +222,10 @@ bool PartitionGroup::updateLoadingRate(int rate, const char* vol)
 
 	if (m_bCancelLoadVolume)
 		return false;	//failed.
+	return true;
+}
+
+bool PartitionGroup::notifyFilesChange(FileOperation, FileInfo*)
+{
 	return true;
 }

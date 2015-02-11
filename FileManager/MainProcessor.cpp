@@ -12,8 +12,6 @@
 #include <algorithm>
 
 MainProcessor::MainProcessor():
-m_bRunning(false),
-m_semaphore(0),
 m_queueLock(NULL),
 m_currentShowName(DefaultInitString)
 {
@@ -34,22 +32,6 @@ m_currentShowName(DefaultInitString)
 MainProcessor::~MainProcessor()
 {
 	stopProcess();
-}
-
-void MainProcessor::startProcess()
-{
-	m_bRunning = true; 
-	this->activate();
-}
-
-void MainProcessor::stopProcess()
-{
-	if(true == m_bRunning)
-	{
-		m_bRunning = false;
-		m_semaphore.release();
-		this->wait();
-	}
 }
 
 int MainProcessor::svc()
@@ -168,9 +150,8 @@ void MainProcessor::createDisplayer(std::string name)
 
 int MainProcessor::loadAllVolumeIDs()
 {
-	DiskReader diskReader("", 0);
 	std::vector<std::string> ids;
-	diskReader.loadAllVolumeIDs(ids);
+	DiskMonitor::loadAllVolumeIDs(ids);
 	std::string vols = "";
 	for (int i = 0; i < ids.size(); ++i)
 	{

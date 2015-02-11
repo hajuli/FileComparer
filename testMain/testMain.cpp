@@ -23,11 +23,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::string pg = "pgroup";
 
+	//test_SetPartitionMulSel();
+	test_SetCurrentShow();
+	//test_GetSameFiles();
 	//test_GetMoreFiles();
 
-	getFiles();
+	//getFiles();
 	
-	Sleep(20000);
+	int y = getchar();
 	return 0;
 }
 
@@ -139,10 +142,10 @@ void test_GetSameFiles()
 	
 	msg = "ParttGroup=" + pg;
 	msg = msg + MessageSplitSign;
-	msg = msg + "Value=xxx(Q:)";
+	msg = msg + "Value=xxx(C:);fdsf(E:);sfsdf;;";
 	postMessageToService("SetPartitionMulSel", msg.c_str());
 
-	Sleep(30000); //waiting for load.
+	Sleep(60000); //waiting for load.
 
 	msg = "ParttGroup=" + pg;
 	msg = msg + MessageSplitSign;
@@ -219,7 +222,7 @@ void getFiles()
 	DWORD dwRetBytes;
 	int I;
 
-	hVol = CreateFile( TEXT("\\\\.\\C:"), 
+	hVol = CreateFile( TEXT("\\\\.\\E:"), 
 		GENERIC_READ | GENERIC_WRITE, 
 		FILE_SHARE_READ | FILE_SHARE_WRITE,
 		NULL,
@@ -250,14 +253,14 @@ void getFiles()
 	ReadData.UsnJournalID = JournalData.UsnJournalID;
 
 	DWORD     ReasonMask = 0;
-	ReadData.ReasonMask = USN_REASON_FILE_CREATE | USN_REASON_FILE_DELETE | USN_REASON_RENAME_OLD_NAME | USN_REASON_RENAME_NEW_NAME;
+	//ReadData.ReasonMask = USN_REASON_FILE_CREATE | USN_REASON_FILE_DELETE | USN_REASON_RENAME_OLD_NAME | USN_REASON_RENAME_NEW_NAME;
 	ReadData.Timeout = 5;
 	ReadData.BytesToWaitFor = BUF_LEN;
 
 	printf( "Journal ID: %I64x\n", JournalData.UsnJournalID );
 	printf( "FirstUsn: %I64x\n\n", JournalData.FirstUsn );
 
-	for(I=0; I<=10; I++)
+	for(I=0; I<=1000; I++)
 	{
 		memset( Buffer, 0, BUF_LEN );
 
@@ -284,6 +287,9 @@ void getFiles()
 		// This loop could go on for a long time, given the current buffer size.
 		while( dwRetBytes > 0 )
 		{
+			static int nfiles = 0;
+			++nfiles;
+			printf( "nfiles %d\n", nfiles);
 			printf( "USN: %I64x\n", UsnRecord->Usn );
 			printf( "FileReferenceNumber: %I64x\n", UsnRecord->FileReferenceNumber);
 			printf( "ParentFileReferenceNumber: %I64x\n", UsnRecord->ParentFileReferenceNumber);
@@ -291,7 +297,7 @@ void getFiles()
 				UsnRecord->FileNameLength/2, 
 				UsnRecord->FileName );
 			printf( "Reason: %x\n", UsnRecord->Reason );
-			printf( "TimeStamp: %d\n", UsnRecord->TimeStamp.QuadPart / 1000 / 1000 / 1000 );
+			printf( "TimeStamp: %lld\n", UsnRecord->TimeStamp.QuadPart / 10 / 1000 / 1000 ); // 100 ns
 			printf( "\n" );
 
 			dwRetBytes -= UsnRecord->RecordLength;
