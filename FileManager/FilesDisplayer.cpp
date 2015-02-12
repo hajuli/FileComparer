@@ -51,6 +51,7 @@ void FilesDisplayer::showDetail()
 	{
 		sprintf(buf, "%s=%s%s", PN_ShowName.c_str(), m_name.c_str(), MessageSplitSign.c_str());
 		m_notifyFunc(cmdFileListItemClear.c_str(), buf);
+		m_showedUuids.clear();
 	}
 	int i = 0, j = 0, nSize = m_selectedFiles.size();
 	for (i = m_showedItemCount, j = 0; i < nSize && j < SHOW_FILE_ITEM_NUM; ++i, ++j)
@@ -73,6 +74,7 @@ void FilesDisplayer::showDetail()
 			lwDate.wYear, lwDate.wMonth, lwDate.wDay, lwDate.wHour, lwDate.wMinute, lwDate.wSecond,
 			f.path.c_str()); 
 		m_notifyFunc(cmdFileListItemAdd.c_str(), buf);
+		m_showedUuids[f.uuid] = true;
 	}
 	m_showedItemCount = i;
 	memset(buf, 0, 1024);

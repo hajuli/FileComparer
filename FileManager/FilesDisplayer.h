@@ -61,7 +61,8 @@ protected:
 
 	PartitionGroup*			m_pg;
 	std::map<DWORDLONG, FileInfo*>	m_allFiles;
-	std::vector<FileInfo*>	m_selectedFiles;
+	std::vector<FileInfo*>		m_selectedFiles;
+	std::map<LONGLONG, bool>	m_showedUuids;
 };
 
 class AllFilesDisplayer : public FilesDisplayer

@@ -13,6 +13,7 @@
 class FileInfo : public IListItem
 {
 public:
+	LONGLONG	uuid;
     DWORDLONG	FileRefNo;
     DWORDLONG	ParentRefNo;
     DWORD		FileAttributes;
@@ -52,4 +53,6 @@ public:
 		sizeBuf[j] = ' ';	// add more space for good look.
 		return sizeBuf;
 	}
+private:
+	static LONGLONG global_uuid;
 };

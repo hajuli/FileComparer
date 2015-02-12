@@ -10,9 +10,11 @@
 
 #include "fileInfo.h"
 
+LONGLONG FileInfo::global_uuid = 10000;
 
 FileInfo::FileInfo()
 :fileSize(0),
 pathSetted(false)
 {
+	uuid = InterlockedIncrement64(&global_uuid);
 };
