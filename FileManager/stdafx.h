@@ -11,6 +11,9 @@
 // Windows Header Files:
 #include <windows.h>
 
+#pragma warning(push)
+#pragma warning(disable: 4996)	// warning C4996: 'sprintf': This function or variable may be unsafe.
 
+//#pragma warning(pop)
 
 // TODO: reference additional headers your program requires here

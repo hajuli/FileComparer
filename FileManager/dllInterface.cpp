@@ -11,6 +11,14 @@
 #include "dllInterface.h"
 #include "MainProcessor.h"
 
+
+void myAssertFail()
+{
+	int i = 0;
+	int j = 10 / i;
+	printf("in myAssertFail\n");
+}
+
 int parseMsg(const char* const msgValue, MessageInfo& msgInfo)
 {
 	std::string msg = msgValue;
@@ -29,8 +37,7 @@ int parseMsg(const char* const msgValue, MessageInfo& msgInfo)
 		pos = para.find("=");
 		if (std::string::npos == pos)
 		{
-			int j = i / 0;
-			// error.
+			myAssertFail();
 		}
 		msgInfo.paras[para.substr(0, pos)] = para.substr(pos + 1);
 		if (b)

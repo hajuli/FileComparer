@@ -10,6 +10,15 @@
 #include "ace/Thread_Mutex.h"
 #include "ace/Task.h"
 
+class MutexGuard
+{
+public:
+	MutexGuard(ACE_Thread_Mutex& mutex):m_mutex(mutex){m_mutex.acquire();};
+	~MutexGuard(){m_mutex.release();};
+private:
+	ACE_Thread_Mutex& m_mutex;
+};
+
 class WorkerTask
 {
 public:

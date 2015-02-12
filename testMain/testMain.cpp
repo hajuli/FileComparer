@@ -24,8 +24,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string pg = "pgroup";
 
 	//test_SetPartitionMulSel();
-	test_SetCurrentShow();
-	//test_GetSameFiles();
+	//test_SetCurrentShow();
+	test_GetSameFiles();
 	//test_GetMoreFiles();
 
 	//getFiles();
@@ -46,6 +46,28 @@ void test_SetPartitionMulSel()
 {
 	std::string pg = "pgroup";
 	std::string msg = "";
+
+	msg = "ParttGroup=" + pg;
+	msg = msg + MessageSplitSign;
+	msg = msg + PN_ShowName + "=" + pg + PV_ShowType_AllFiles;
+	msg = msg + MessageSplitSign;
+	msg = msg + PN_ShowType + "=" + PV_ShowType_AllFiles;
+	postMessageToService("SetCurrentShow", msg.c_str());
+	Sleep(2000);
+
+	msg = "ParttGroup=" + pg;
+	msg = msg + MessageSplitSign;
+	msg = msg + "Value=xxx(Q:)";
+	postMessageToService("SetPartitionMulSel", msg.c_str());
+
+	Sleep(30000); //waiting for load.
+
+	msg = "ParttGroup=" + pg;
+	msg = msg + MessageSplitSign;
+	msg = msg + "Value=";
+	postMessageToService("SetPartitionMulSel", msg.c_str());
+
+	Sleep(1000); //waiting for load.
 
 	msg = "ParttGroup=" + pg;
 	msg = msg + MessageSplitSign;
@@ -170,7 +192,7 @@ void test_GetMoreFiles()
 
 	msg = "ParttGroup=" + cmpPg;
 	msg = msg + MessageSplitSign;
-	msg = msg + "Value=yyy(C:)";
+	msg = msg + "Value=yyy(Q:)";
 	postMessageToService("SetPartitionMulSel", msg.c_str());
 
 	Sleep(30000); //waiting for load.

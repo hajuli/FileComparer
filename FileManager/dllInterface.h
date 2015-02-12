@@ -84,6 +84,9 @@ enum MessageTypes{
 	MSG_MaxSize,
 };
 
+
+void myAssertFail();
+
 struct MessageInfo
 {
 	MessageTypes type;

@@ -12,9 +12,13 @@
 #include <algorithm>
 
 MainProcessor::MainProcessor():
-m_queueLock(NULL),
+m_lock(NULL),
+m_msgLock(NULL),
+m_bCancelLoadVolume(false),
 m_currentShowName(DefaultInitString)
 {
+	m_nameToDiskMonitors.clear();
+
 	m_nextMessage[MSG_None] = MSG_None;
 	m_nextMessage[MSG_SetPartitionGroup] = MSG_ShowFileList;
 	m_nextMessage[MSG_SetCurrentShow] = MSG_ShowFileList;
@@ -48,13 +52,18 @@ int MainProcessor::svc()
 			continue;
 		}
 		MessageInfo msg = m_msgList.front();
-		m_msgList.pop_front();
+		{
+			MutexGuard guard(m_msgLock);
+			m_msgList.pop_front();
+		}
+
+		MutexGuard guard(m_lock);
 		
 		if (MSG_SetPartitionGroup == msg.type)
 		{
 			setPartitionGroup(msg);
 		}
-		else if (MSG_ShowFileList == msg.type)
+		else if (MSG_ShowFileList == msg.type || MSG_ShowMoreItems == msg.type)
 		{
 			showFileList(msg);
 		}
@@ -66,10 +75,6 @@ int MainProcessor::svc()
 		}
 		else if (MSG_SortFileList == msg.type)
 		{
-		}
-		else if (MSG_ShowMoreItems == msg.type)
-		{
-			showFileList(msg);
 		}
 		else if (MSG_GetSameFileAllPaths == msg.type)
 		{
@@ -92,8 +97,12 @@ void MainProcessor::regisgerCallBack(CallBackToOwner notifyFunc)
 
 int MainProcessor::addMessage(MessageInfo msg)
 {
-	m_msgList.push_back(msg);
-	m_semaphore.release();
+	if (MSG_None != msg.type)
+	{
+		MutexGuard guard(m_msgLock);
+		m_msgList.push_back(msg);
+		m_semaphore.release();
+	}
 	return 0;
 }
 
@@ -101,11 +110,7 @@ int MainProcessor::addNextMessage(MessageInfo msg)
 {
 	MessageInfo newMsg = msg;
 	newMsg.type = m_nextMessage[msg.type];
-	if (MSG_None != newMsg.type)
-	{
-		m_msgList.push_back(newMsg);
-		m_semaphore.release();
-	}
+	addMessage(newMsg);
 	return 0;
 }
 
@@ -175,11 +180,11 @@ void MainProcessor::setPartitionGroup(MessageInfo msg)
 	if (m_partitionGroups.end() == m_partitionGroups.find(name))
 	{
 		PartitionGroup* p = new PartitionGroup(name);
-		p->regisgerCallBack(m_notifyFunc);
 		m_partitionGroups[name] = p;
 	}
 	PartitionGroup* p = m_partitionGroups[name];
-	p->loadVolumeFiles(msg.getPara(PN_MessageValue));
+	p->clearAllVolume();
+	loadVolumeFiles(name, msg.getPara(PN_MessageValue));
 
 	addNextMessage(msg);
 }
@@ -257,17 +262,126 @@ int MainProcessor::showFileList(MessageInfo msg)
 
 int MainProcessor::cancelLoadVolume(MessageInfo msg)
 {
-	std::string name = msg.getPara(PN_PartitionGroup);
-	if ("" == name)
-	{
-		return 0;
-	}
-	if (m_partitionGroups.end() == m_partitionGroups.find(name))
-	{
-		return 0;
-	}
-	PartitionGroup* p = m_partitionGroups[name];
-	p->cancelLoadVolume();
-
+	m_bCancelLoadVolume = true;
 	return 0;
+}
+
+void MainProcessor::loadVolumeFiles(std::string pgName, std::string volume)
+{
+	m_bCancelLoadVolume = false;
+	std::vector<std::string> ids;
+	if (VolumeAllIDs == volume)
+	{
+		DiskMonitor::loadAllVolumeIDs(ids);
+	}
+	else
+	{
+		int i = 0;
+		while ( i < volume.size())
+		{
+			if(std::string::npos != volume.find(";", i))
+			{
+				int j = volume.find(";", i);
+				ids.push_back(volume.substr(i, j - i));
+				i = j + 1;
+			}
+			else
+			{
+				ids.push_back(volume.substr(i));
+				break;
+			}
+		}
+	}
+	char buf[500];
+	std::string showVol = "";
+	std::string vol;
+
+	for (int id = 0; id < ids.size() && false == m_bCancelLoadVolume; ++id)
+	{
+		vol = ids[id];
+		if (std::string::npos != vol.find("(") && std::string::npos != vol.find(")", vol.find("(")))
+		{
+			vol = vol.substr(vol.find("(") + 1);
+			vol = vol.substr(0, vol.find(")"));
+		}
+		else
+		{
+			printf("error, not find (x:) from string %s\n", vol);
+			continue;
+		}
+		sprintf(buf, "start loading files from volume %s", vol.c_str());
+		m_notifyFunc(cmdShowStatusMessage.c_str(), buf);
+
+		updateLoadingRate(0, vol.c_str());
+	
+		if (m_nameToDiskMonitors.end() != m_nameToDiskMonitors.find(vol))
+		{
+			m_partitionGroups[pgName]->addVolume(vol, m_nameToDiskMonitors.find(vol)->second);
+			continue;
+		}
+		DiskMonitor* dm = new DiskMonitor(vol, this);
+		if (dm->loadAllFiles())
+		{
+			dm->startProcess();
+			m_nameToDiskMonitors[vol] = dm;
+			m_partitionGroups[pgName]->addVolume(vol, dm);
+			sprintf(buf, "load %d files from volume %s", dm->getAllFilesCount(), vol.c_str());
+			m_notifyFunc(cmdShowStatusMessage.c_str(), buf);
+		}
+		else
+		{
+			delete dm;
+			dm = 0;
+			sprintf(buf, "cancel or fail to load volume %s", showVol.c_str());
+			m_notifyFunc(cmdShowStatusMessage.c_str(), buf);
+		}
+		
+		if (!showVol.empty())
+		{
+			showVol = showVol + ",";
+		}
+		showVol = showVol + vol;
+
+	}
+	updateLoadingRate(100);
+
+}
+
+bool MainProcessor::updateLoadingRate(int rate, const char* vol)
+{
+	char buf[1024] = {0};
+	if (vol)
+	{
+		sprintf(buf, "loadingRate=%d,.., volume=%s", rate, vol);
+	}
+	else
+	{
+		sprintf(buf, "loadingRate=%d", rate);
+	}
+	m_notifyFunc(cmdUpdateLoadingRate.c_str(), buf);
+
+	if (m_bCancelLoadVolume)
+		return false;	//failed.
+	return true;
+}
+
+bool MainProcessor::notifyFilesChange(FileOperation fo, std::string volume, FileInfo* fi)
+{
+	MutexGuard guard(m_lock);
+	std::map<std::string, PartitionGroup*>::iterator it = m_partitionGroups.begin();
+	while (m_partitionGroups.end() != it)
+	{
+		PartitionGroup* pg = it->second;
+		if (pg->volumeChange(fo, volume, fi))
+		{
+			if (m_pgNameToDisplayerName[it->first].end() != m_pgNameToDisplayerName[it->first].find(m_currentShowName))
+			{
+				MessageInfo msg;
+				msg.type = MSG_ShowFileList;
+				addMessage(msg);
+			}
+		}
+		++it;
+	}
+	return true;
 }

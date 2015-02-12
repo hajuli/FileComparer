@@ -64,10 +64,10 @@ void FilesDisplayer::showDetail()
 		FileTimeToSystemTime(&f.lastAccessTime, &lwDate);
 		memset(buf, 0, 1024);
 		sprintf(buf,
-			"%s=%s,.., RowRefIndex=%I64u,.., ParentRefNum=%I64u,.., ParentRefNo=%I64u,.., name=%s,.., FileAttributes=%d,.., size=%s,.., createDate=%d-%02d-%02d %02d:%02d:%02d,.., modifyDate=%d-%02d-%02d %02d:%02d:%02d,.., lastAccessDate=%d-%02d-%02d %02d:%02d:%02d,.., path=%s,..,",
+			"%s=%s,.., RowRefIndex=%I64u,.., ParentRefNo=%I64u,.., name=%s,.., FileAttributes=%d,.., size=%s,.., createDate=%d-%02d-%02d %02d:%02d:%02d,.., modifyDate=%d-%02d-%02d %02d:%02d:%02d,.., lastAccessDate=%d-%02d-%02d %02d:%02d:%02d,.., path=%s,..,",
 			PN_ShowName.c_str(),
 			m_name.c_str(),
-			f.FileRefNo, f.ParentRefNo, f.ParentRefNo, f.Name.c_str(), f.FileAttributes, f.fileSizeAsString(),
+			f.FileRefNo, f.ParentRefNo, f.Name.c_str(), f.FileAttributes, f.fileSizeAsString(),
 			cDate.wYear, cDate.wMonth, cDate.wDay, cDate.wHour, cDate.wMinute, cDate.wSecond,
 			mDate.wYear, mDate.wMonth, mDate.wDay, mDate.wHour, mDate.wMinute, mDate.wSecond,
 			lwDate.wYear, lwDate.wMonth, lwDate.wDay, lwDate.wHour, lwDate.wMinute, lwDate.wSecond,

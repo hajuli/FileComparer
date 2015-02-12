@@ -127,16 +127,18 @@ class IDiskMonitorEvent
 public:
 	virtual ~IDiskMonitorEvent(){};
 	virtual bool updateLoadingRate(int rate, const char* vol = 0) = 0;
-	virtual bool notifyFilesChange(FileOperation, FileInfo*) = 0;
+	virtual bool notifyFilesChange(FileOperation, std::string volume, FileInfo*) = 0;
 };
 
 class DiskMonitor : public ThreadWorker
 {
 public:
-	DiskMonitor(std::string path, IDiskMonitorEvent* eventHandler = 0);
+	DiskMonitor(std::string volume, IDiskMonitorEvent* eventHandler = 0);
 	~DiskMonitor();
 
-	void getFiles();
+	bool loadAllFiles();
+	int	 getAllFilesCount(){return m_allFiles.size();};
+	void getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles);
 	bool EnumUsnRecord( const char* drvname, DuLinkList & fileList);
 
 	static void loadAllVolumeIDs(std::vector<std::string>& ids); // item like: (C:) OS
@@ -146,12 +148,15 @@ public:
 
 private:
 	int svc();
+	void constructFileFullPath(DuLinkList& files);
 
 	USN			m_startUsn;
 	DWORDLONG	m_UsnJournalID;
-	std::string	m_driveName;
 	std::string m_diskName;
 	VolNTFSInfoNode m_volInfo;
+
+	DuLinkList	m_allFiles;
+	std::map<DWORDLONG, FileInfo*>	m_allFilesMap;
 
 	IDiskMonitorEvent* m_eventHandler;
 };

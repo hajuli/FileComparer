@@ -21,35 +21,20 @@ const int SHOW_FILE_ITEM_NUM = 100;
 class DiskReader;
 class ThreadWorker;
 
-class PartitionGroup: public IDiskMonitorEvent
+class PartitionGroup
 {
 public:
 	PartitionGroup(std::string name);
 	~PartitionGroup();
 
-	void regisgerCallBack(CallBackToOwner notifyFunc);
-
-	int cancelLoadVolume() {m_bCancelLoadVolume = true; return 0;};
-
-	virtual bool updateLoadingRate(int rate, const char* vol = 0);
-	virtual bool notifyFilesChange(FileOperation, FileInfo*);
-
-	void loadVolumeFiles(std::string volume);	// eg "(E:)"
-
+	void addVolume(std::string name, DiskMonitor* dm);
+	void clearAllVolume(){m_nameToDiskMonitors.clear(); ++m_updateId;};
 	int  getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles, int updateId);
-
+	
+	bool volumeChange(FileOperation fo, std::string volume, FileInfo* fi);
 private:
 
-	void reSetData();
-
-	void constructFileFullPath(DuLinkList & files);
-
 	std::string				m_name;
-	volatile bool			m_bCancelLoadVolume;
 	int						m_updateId;
-
-	CallBackToOwner			m_notifyFunc;
-
-	DiskMonitor				m_diskReader;
-	DuLinkList				m_fileList;
+	std::map<std::string, DiskMonitor*>	m_nameToDiskMonitors;
 };

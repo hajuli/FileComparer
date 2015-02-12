@@ -38,17 +38,134 @@ std::string WChar2Ansi(LPCWSTR pwszSrc)
 	return strTemp;
 }
 
-DiskMonitor::DiskMonitor(std::string path, IDiskMonitorEvent* eventHandler):
-m_diskName(path),
+DiskMonitor::DiskMonitor(std::string volume, IDiskMonitorEvent* eventHandler):
+m_diskName(volume),
 m_startUsn(0),
 m_eventHandler(eventHandler)
 {
+	m_allFiles.cleanUp();
 }
-
 
 DiskMonitor::~DiskMonitor()
 {
+	FileInfo* p = (FileInfo*)m_allFiles.pop();
+	while (p)
+	{
+		delete p;
+		p = (FileInfo*)m_allFiles.pop();
+	}
+	m_allFiles.cleanUp();
 }
+
+bool DiskMonitor::loadAllFiles()
+{
+	bool enumed = EnumUsnRecord(m_diskName.c_str(), m_allFiles);
+	if (enumed)
+	{
+		constructFileFullPath(m_allFiles);
+	}
+	return enumed;
+}
+
+void DiskMonitor::constructFileFullPath(DuLinkList& files)
+{
+	m_allFilesMap.clear();
+	FileInfo* p = (FileInfo*)files.head();
+	while (p)
+	{
+		if (m_allFilesMap.end() != m_allFilesMap.find(p->FileRefNo))
+		{
+			FileInfo* tmp = m_allFilesMap[p->FileRefNo];
+			myAssertFail();
+			std::string name = tmp->Name;
+		}
+		m_allFilesMap[p->FileRefNo] = p;
+		p = (FileInfo*)files.next(p);
+	}
+
+	FileInfo* stack[64];
+	std::map<DWORDLONG, FileInfo*>::const_iterator it;
+	int stackCount = 0;
+	FileInfo* cur = 0;
+	FileInfo* par = 0;
+
+	p = (FileInfo*)files.head();
+	while (p)
+	{
+		cur = p;
+		p = (FileInfo*)files.next(p);
+		if (cur->pathSetted)
+		{
+			continue;
+		}
+		stack[stackCount++] = cur;
+		while (stackCount)
+		{
+			cur = stack[stackCount - 1];
+			it = m_allFilesMap.find(cur->ParentRefNo);
+			if (m_allFilesMap.end() == it)
+			{
+				cur->path = cur->path + "\\" + cur->Name;
+				cur->pathSetted = true;
+				--stackCount;
+			}
+			else
+			{
+				par = it->second;
+				if (par->pathSetted)
+				{
+					cur->path = par->path + "\\" + cur->Name;
+					cur->pathSetted = true;
+					--stackCount;
+				}
+				else
+				{
+					stack[stackCount++] = par;
+				}
+			}
+		}
+	}
+}
+
+void DiskMonitor::getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles)
+{
+	FileInfo* p = (FileInfo*)m_allFiles.head();
+	while (p)
+	{
+		if (allFiles.end() != allFiles.find(p->FileRefNo))
+		{
+			//myAssertFail();	//no assert, different volume have same ref no.
+		}
+		allFiles[p->FileRefNo] = p;	//need update.
+		p = (FileInfo*)m_allFiles.next(p);
+	}
+}
+
+void printUsnRecord(PUSN_RECORD& usnRecord)
+{
+	printf( "USN: %I64x\n", usnRecord->Usn );
+	printf( "FileReferenceNumber: %I64x\n", usnRecord->FileReferenceNumber);
+	printf( "ParentFileReferenceNumber: %I64x\n", usnRecord->ParentFileReferenceNumber);
+	printf("File name: %.*S\n", usnRecord->FileNameLength/2, usnRecord->FileName );
+	printf( "Reason: %x\n", usnRecord->Reason );
+	printf( "TimeStamp: %lld\n", usnRecord->TimeStamp.QuadPart / 10 / 1000 / 1000 ); // 100 ns
+	printf( "\n" );
+}
+
+void setUsnRecord(PUSN_RECORD& usnRecord, FileInfo& fInfo)
+{
+	fInfo.FileRefNo = usnRecord->FileReferenceNumber;
+    fInfo.ParentRefNo = usnRecord->ParentFileReferenceNumber;
+    fInfo.FileAttributes = usnRecord->FileAttributes;
+	WCHAR fileName[MAX_PATH] = {0};
+    memcpy( fileName, usnRecord->FileName, usnRecord->FileNameLength );
+    fileName[usnRecord->FileNameLength/2] = L'';
+	fInfo.Name = WChar2Ansi(fileName);
+	
+	fInfo.NameUppered = fInfo.Name.c_str();
+	transform(fInfo.NameUppered.begin(), fInfo.NameUppered.end(), fInfo.NameUppered.begin(), toupper);
+}
+
 #define BUF_LEN 4096
 int DiskMonitor::svc()
 {
@@ -68,7 +185,7 @@ int DiskMonitor::svc()
 		DWORD dwBytes;
 		DWORD dwRetBytes;
 
-		hVol = CreateFile((std::string("\\\\.\\") + m_driveName).c_str(),
+		hVol = CreateFile((std::string("\\\\.\\") + m_diskName).c_str(),
 			GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 
 		if( hVol == INVALID_HANDLE_VALUE )
@@ -106,39 +223,49 @@ int DiskMonitor::svc()
 			{
 				static int nfiles = 0;
 				++nfiles;
-				printf( "nfiles %d\n", nfiles);
-				printf( "USN: %I64x\n", UsnRecord->Usn );
-				printf( "FileReferenceNumber: %I64x\n", UsnRecord->FileReferenceNumber);
-				printf( "ParentFileReferenceNumber: %I64x\n", UsnRecord->ParentFileReferenceNumber);
-				printf("File name: %.*S\n", UsnRecord->FileNameLength/2, UsnRecord->FileName );
-				printf( "Reason: %x\n", UsnRecord->Reason );
-				printf( "TimeStamp: %lld\n", UsnRecord->TimeStamp.QuadPart / 10 / 1000 / 1000 ); // 100 ns
-				printf( "\n" );
-
+				printf( "changed times %d\n", nfiles);
+				printUsnRecord(UsnRecord);
+				
 				FileInfo* fi = new FileInfo();
-                FileInfo& finf = *fi;
-                finf.FileRefNo = UsnRecord->FileReferenceNumber;
-                finf.ParentRefNo = UsnRecord->ParentFileReferenceNumber;
-                finf.FileAttributes = UsnRecord->FileAttributes;
-				WCHAR fileName[MAX_PATH];
-                memcpy( fileName, UsnRecord->FileName, UsnRecord->FileNameLength );
-                fileName[UsnRecord->FileNameLength/2] = L'';
-				finf.Name = WChar2Ansi(fileName);
-				finf.path = m_driveName;
-				File_Info_by_NTFS(hVol, finf.FileRefNo, m_volInfo, finf);
+				setUsnRecord(UsnRecord, *fi);
+				if (m_allFilesMap.end() == m_allFilesMap.find(fi->ParentRefNo))
+				{
+					//root dir
+					//myAssertFail();
+					fi->path = m_diskName + "\\" + fi->Name;
+				}
+				else
+				{
+					fi->path = m_allFilesMap[fi->ParentRefNo]->path + "\\" + fi->Name;
+				}
+				File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
 
 
 				if (USN_REASON_FILE_CREATE & UsnRecord->Reason)
 				{
-					m_eventHandler->notifyFilesChange(FileOperation::File_Create, fi);
+					m_allFiles.InsertItem( fi );
+					m_allFilesMap[fi->FileRefNo] = fi;
+					m_eventHandler->notifyFilesChange(File_Create, m_diskName, fi);
 				}
 				else if (USN_REASON_FILE_DELETE & UsnRecord->Reason)
 				{
-					m_eventHandler->notifyFilesChange(FileOperation::File_Delete, fi);
+					FileInfo* oldFile = m_allFilesMap[fi->FileRefNo];	// maybe judge first.
+					m_allFiles.removeItem(oldFile);		//no delete,,just keep data.
+					m_eventHandler->notifyFilesChange(File_Delete, m_diskName, fi);
 				}
 				else if (USN_REASON_RENAME_NEW_NAME & UsnRecord->Reason)
 				{
-					m_eventHandler->notifyFilesChange(FileOperation::File_Rename, fi);
+					FileInfo* oldFile = m_allFilesMap[fi->FileRefNo];	// maybe judge first.
+					m_allFiles.removeItem(oldFile);	//delete old file info. insert new. save new.
+					delete oldFile;
+					m_allFiles.InsertItem( fi );
+					m_allFilesMap[fi->FileRefNo] = fi;
+					m_eventHandler->notifyFilesChange(File_Rename, m_diskName, fi);
+				}
+				else 
+				{
+					myAssertFail();
+					delete fi;
 				}
 
 				dwRetBytes -= UsnRecord->RecordLength;
@@ -191,7 +318,6 @@ bool DiskMonitor::EnumUsnRecord( const char* drvname, DuLinkList & fileList)
 {
     bool ret = false;
 	int counts = 0;
-	m_driveName = drvname;
 
     char FileSystemName[MAX_PATH+1];
     DWORD MaximumComponentLength;
@@ -249,17 +375,9 @@ bool DiskMonitor::EnumUsnRecord( const char* drvname, DuLinkList & fileList)
                             while( dwRetBytes > 0 )
                             {
 								FileInfo* fi = new FileInfo();
-                                FileInfo& finf = *fi;
-                                finf.FileRefNo = UsnRecord->FileReferenceNumber;
-                                finf.ParentRefNo = UsnRecord->ParentFileReferenceNumber;
-                                finf.FileAttributes = UsnRecord->FileAttributes;
-								WCHAR fileName[MAX_PATH];
-                                memcpy( fileName, UsnRecord->FileName, UsnRecord->FileNameLength );
-                                fileName[UsnRecord->FileNameLength/2] = L'';
-								finf.Name = WChar2Ansi(fileName);
-								finf.path = drvname;
-								//GetFileDetail(hVol, finf.FileRefNo, finf);
-								File_Info_by_NTFS(hVol, finf.FileRefNo, m_volInfo, finf);
+								setUsnRecord(UsnRecord, *fi);				
+								fi->path = drvname;
+								File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
                                 fileList.InsertItem( fi );
                                 dwRetBytes -= UsnRecord->RecordLength;
                                 UsnRecord = (PUSN_RECORD)( (PCHAR)UsnRecord + UsnRecord->RecordLength );
@@ -283,7 +401,7 @@ bool DiskMonitor::EnumUsnRecord( const char* drvname, DuLinkList & fileList)
         }
         CloseHandle( hVol );
     }
-	printf("counts:%d\n", counts);
+	printf("load from %s , enum usn counts:%d\n", drvname, counts);
     return ret;
 }
 
