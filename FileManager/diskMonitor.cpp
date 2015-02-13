@@ -44,6 +44,8 @@ m_startUsn(0),
 m_eventHandler(eventHandler)
 {
 	m_allFiles.cleanUp();
+	m_allFilesMap.clear();
+	m_deletedFilesMap.clear();
 }
 
 DiskMonitor::~DiskMonitor()
@@ -84,7 +86,7 @@ void DiskMonitor::constructFileFullPath(DuLinkList& files)
 	}
 
 	FileInfo* stack[64];
-	std::map<DWORDLONG, FileInfo*>::const_iterator it;
+	FilesMapType::const_iterator it;
 	int stackCount = 0;
 	FileInfo* cur = 0;
 	FileInfo* par = 0;
@@ -127,16 +129,16 @@ void DiskMonitor::constructFileFullPath(DuLinkList& files)
 	}
 }
 
-void DiskMonitor::getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles)
+void DiskMonitor::getAllFiles(FilesMapType& allFiles)
 {
 	FileInfo* p = (FileInfo*)m_allFiles.head();
 	while (p)
 	{
-		if (allFiles.end() != allFiles.find(p->FileRefNo))
+		if (allFiles.end() != allFiles.find(p->uuid))
 		{
-			//myAssertFail();	//no assert, different volume have same ref no.
+			myAssertFail();
 		}
-		allFiles[p->FileRefNo] = p;	//need update.
+		allFiles[p->uuid] = p;
 		p = (FileInfo*)m_allFiles.next(p);
 	}
 }
@@ -250,17 +252,21 @@ int DiskMonitor::svc()
 				else if (USN_REASON_FILE_DELETE & UsnRecord->Reason)
 				{
 					FileInfo* oldFile = m_allFilesMap[fi->FileRefNo];	// maybe judge first.
-					m_allFiles.removeItem(oldFile);		//no delete,,just keep data.
+					m_allFiles.removeItem(oldFile);
+					m_allFilesMap.erase(fi->FileRefNo);
+					m_deletedFilesMap[oldFile->uuid] = oldFile;		//move to this map.
 					m_eventHandler->notifyFilesChange(File_Delete, m_diskName, fi);
 				}
 				else if (USN_REASON_RENAME_NEW_NAME & UsnRecord->Reason)
 				{
 					FileInfo* oldFile = m_allFilesMap[fi->FileRefNo];	// maybe judge first.
 					m_allFiles.removeItem(oldFile);	//delete old file info. insert new. save new.
-					delete oldFile;
+					//delete oldFile;
+					m_deletedFilesMap[oldFile->uuid] = oldFile;
 					m_allFiles.InsertItem( fi );
 					m_allFilesMap[fi->FileRefNo] = fi;
-					m_eventHandler->notifyFilesChange(File_Rename, m_diskName, fi);
+					m_eventHandler->notifyFilesChange(File_Delete, m_diskName, oldFile);
+					m_eventHandler->notifyFilesChange(File_Create, m_diskName, fi);
 				}
 				else 
 				{

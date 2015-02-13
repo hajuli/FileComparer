@@ -27,9 +27,6 @@ m_currentShowName(DefaultInitString)
 	m_nextMessage[MSG_SortFileList] = MSG_ShowFileList;
 	m_nextMessage[MSG_ShowMoreItems] = MSG_None;
 	m_nextMessage[MSG_GetSameFileAllPaths] = MSG_None;
-	m_nextMessage[MSG_SetLoadVolume] = MSG_None;
-	m_nextMessage[MSG_FindSameFile] = MSG_None;
-	m_nextMessage[MSG_UpdateSameFilesSelectCondition] = MSG_None;
 }
 
 
@@ -59,6 +56,8 @@ int MainProcessor::svc()
 
 		MutexGuard guard(m_lock);
 		
+		msg.print();
+		
 		if (MSG_SetPartitionGroup == msg.type)
 		{
 			setPartitionGroup(msg);
@@ -69,9 +68,7 @@ int MainProcessor::svc()
 		}
 		else if (MSG_UpdateSelectCondition == msg.type)
 		{
-		}
-		else if (MSG_UpdateSameFilesSelectCondition == msg.type)
-		{
+			updateSelectCondition(msg);
 		}
 		else if (MSG_SortFileList == msg.type)
 		{
@@ -79,12 +76,6 @@ int MainProcessor::svc()
 		else if (MSG_GetSameFileAllPaths == msg.type)
 		{
 			getSameFileAllPaths(msg);
-		}
-		else if (MSG_SetLoadVolume == msg.type)
-		{
-		}
-		else if (MSG_FindSameFile == msg.type)
-		{
 		}
 	}
 	return 0;
@@ -112,6 +103,23 @@ int MainProcessor::addNextMessage(MessageInfo msg)
 	newMsg.type = m_nextMessage[msg.type];
 	addMessage(newMsg);
 	return 0;
+}
+
+void MainProcessor::mergeMsgValues(MessageInfo& msg)
+{
+	std::string name = msg.getPara(PN_ShowName);
+	if ("" == name)
+	{
+		return ;
+	}
+	if (m_showNameMessages.end() == m_showNameMessages.find(name))
+	{
+		m_showNameMessages[name] = msg;	// just using first msg.
+	}
+	else
+	{
+		m_showNameMessages[name].mergeMsgValues(msg);
+	}
 }
 
 void MainProcessor::createDisplayer(std::string name)
@@ -191,15 +199,11 @@ void MainProcessor::setPartitionGroup(MessageInfo msg)
 
 int MainProcessor::setCurrentShow(MessageInfo msg)
 {
-	if (msg.hasPara(PN_ShowName))
+	mergeMsgValues(msg);
+	if (msg.hasPara(PN_ShowName) && m_currentShowName != msg.getPara(PN_ShowName))
 	{
-		std::string name = msg.getPara(PN_ShowName);
-		if (m_showNameMessages.end() == m_showNameMessages.find(name))
-		{
-			m_showNameMessages[name] = msg;	// just using first msg.
-		}
 		//aways set new show Name.
-		m_currentShowName = name;
+		m_currentShowName = msg.getPara(PN_ShowName);
 		addNextMessage(msg);
 	}
 	return 0;
@@ -207,12 +211,10 @@ int MainProcessor::setCurrentShow(MessageInfo msg)
 
 int MainProcessor::updateSelectCondition(MessageInfo msg)
 {
+	mergeMsgValues(msg);
 	std::string name = msg.getPara(PN_ShowName);
 	if (m_filesDisplayers.end() != m_filesDisplayers.find(name))
-	{
-		FilesDisplayer* fd = m_filesDisplayers[name];
-		fd->updateSelectCondition(msg.getPara(PN_MessageValue));
-	
+	{	
 		addNextMessage(msg);
 	}
 	return 0;
@@ -254,6 +256,8 @@ int MainProcessor::showFileList(MessageInfo msg)
 	}
 	if (m_filesDisplayers.end() != m_filesDisplayers.find(m_currentShowName))
 	{
+		m_filesDisplayers[m_currentShowName]->updateSelectCondition(
+			m_showNameMessages[m_currentShowName].getPara(PN_SelectCondition));
 		m_filesDisplayers[m_currentShowName]->show();
 	}
 	return 0;

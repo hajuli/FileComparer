@@ -15,12 +15,6 @@
 #include <list>
 #include <map>
 
-
-const int SHOW_FILE_ITEM_NUM = 100;
-
-class DiskReader;
-class ThreadWorker;
-
 class PartitionGroup
 {
 public:
@@ -29,12 +23,16 @@ public:
 
 	void addVolume(std::string name, DiskMonitor* dm);
 	void clearAllVolume(){m_nameToDiskMonitors.clear(); ++m_updateId;};
-	int  getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles, int updateId);
+	int  getUpdatedFiles(FilesMapType& allFiles, int updateId, std::vector<FileOperationRecord>& operations);
 	
 	bool volumeChange(FileOperation fo, std::string volume, FileInfo* fi);
 private:
 
 	std::string				m_name;
 	int						m_updateId;
+	int						m_startUpdateId;
+	ACE_Thread_Mutex		m_lock;
 	std::map<std::string, DiskMonitor*>	m_nameToDiskMonitors;
+
+	std::map<int, FileOperationRecord>	m_fileOperationRecords;
 };

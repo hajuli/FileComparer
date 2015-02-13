@@ -43,6 +43,7 @@ namespace FileComparer
         public static string PN_ShowName			= "ShowName";
         public static string PN_ShowType            = "ShowType";
         public static string PN_CmpToParttGroup     = "CmpToParttGroup";
+        public static string PN_SelectCondition     = "SelectCondition";
 
         //msg para values.
         public static string PV_ShowType_AllFiles   = "AllFiles";

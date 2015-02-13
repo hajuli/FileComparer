@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ACEd.lib"
+				AdditionalDependencies="ACEd.lib DbgHelp.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="E:\test_code\ACE\5_6\ACE_wrappers\lib"
 				GenerateDebugInformation="true"
@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ACE.lib"
+				AdditionalDependencies="ACE.lib DbgHelp.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="E:\test_code\ACE\5_6\ACE_wrappers\lib"
 				GenerateDebugInformation="true"

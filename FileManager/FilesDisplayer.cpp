@@ -51,7 +51,7 @@ void FilesDisplayer::showDetail()
 	{
 		sprintf(buf, "%s=%s%s", PN_ShowName.c_str(), m_name.c_str(), MessageSplitSign.c_str());
 		m_notifyFunc(cmdFileListItemClear.c_str(), buf);
-		m_showedUuids.clear();
+		m_showedFiles.clear();
 	}
 	int i = 0, j = 0, nSize = m_selectedFiles.size();
 	for (i = m_showedItemCount, j = 0; i < nSize && j < SHOW_FILE_ITEM_NUM; ++i, ++j)
@@ -65,7 +65,8 @@ void FilesDisplayer::showDetail()
 		FileTimeToSystemTime(&f.lastAccessTime, &lwDate);
 		memset(buf, 0, 1024);
 		sprintf(buf,
-			"%s=%s,.., RowRefIndex=%I64u,.., ParentRefNo=%I64u,.., name=%s,.., FileAttributes=%d,.., size=%s,.., createDate=%d-%02d-%02d %02d:%02d:%02d,.., modifyDate=%d-%02d-%02d %02d:%02d:%02d,.., lastAccessDate=%d-%02d-%02d %02d:%02d:%02d,.., path=%s,..,",
+			"uuid=%I64u,.., %s=%s,.., RowRefIndex=%I64u,.., ParentRefNo=%I64u,.., name=%s,.., FileAttributes=%d,.., size=%s,.., createDate=%d-%02d-%02d %02d:%02d:%02d,.., modifyDate=%d-%02d-%02d %02d:%02d:%02d,.., lastAccessDate=%d-%02d-%02d %02d:%02d:%02d,.., path=%s,..,",
+			f.uuid,
 			PN_ShowName.c_str(),
 			m_name.c_str(),
 			f.FileRefNo, f.ParentRefNo, f.Name.c_str(), f.FileAttributes, f.fileSizeAsString(),
@@ -74,7 +75,7 @@ void FilesDisplayer::showDetail()
 			lwDate.wYear, lwDate.wMonth, lwDate.wDay, lwDate.wHour, lwDate.wMinute, lwDate.wSecond,
 			f.path.c_str()); 
 		m_notifyFunc(cmdFileListItemAdd.c_str(), buf);
-		m_showedUuids[f.uuid] = true;
+		m_showedFiles[f.uuid] = m_selectedFiles[i];
 	}
 	m_showedItemCount = i;
 	memset(buf, 0, 1024);
@@ -94,7 +95,7 @@ void FilesDisplayer::selectFiles()
 	m_selectedFiles.reserve(m_allFiles.size());
 	m_selectedFiles.clear();
 
-	std::map<DWORDLONG, FileInfo*>::const_iterator it = m_allFiles.begin();
+	FilesMapType::const_iterator it = m_allFiles.begin();
 	FileInfo* p = 0;
 	while (m_allFiles.end() != it)
 	{
@@ -282,8 +283,9 @@ AllFilesDisplayer::~AllFilesDisplayer()
 void AllFilesDisplayer::prepareData()
 {
 	int preId = m_pgUpdatedId;
-	m_pgUpdatedId = m_pg->getAllFiles(m_allFiles, preId);
-	
+	std::vector<FileOperationRecord> operations;
+	operations.clear();
+	m_pgUpdatedId = m_pg->getUpdatedFiles(m_allFiles, preId, operations);
 	if (preId == m_pgUpdatedId)
 	{
 		return;
@@ -327,7 +329,9 @@ void SameFilesDisplayer::reSet()
 void SameFilesDisplayer::prepareData()
 {
 	int preId = m_pgUpdatedId;
-	m_pgUpdatedId = m_pg->getAllFiles(m_allFiles, preId);
+	std::vector<FileOperationRecord> operations;
+	operations.clear();
+	m_pgUpdatedId = m_pg->getUpdatedFiles(m_allFiles, preId, operations);
 	
 	if (preId == m_pgUpdatedId)
 	{
@@ -338,7 +342,7 @@ void SameFilesDisplayer::prepareData()
 	std::vector<FileInfo*> vec;
 	vec.clear();
 
-	std::map<DWORDLONG, FileInfo*>::const_iterator it = m_allFiles.begin();
+	FilesMapType::const_iterator it = m_allFiles.begin();
 	FileInfo* p = 0;
 	while (m_allFiles.end() != it)
 	{
@@ -507,10 +511,12 @@ void MoreFilesDisplayer::reSet()
 void MoreFilesDisplayer::prepareData()
 {
 	int preId = m_pgUpdatedId;
-	m_pgUpdatedId = m_pg->getAllFiles(m_oriAllFiles, preId);
+	std::vector<FileOperationRecord> operations;
+	operations.clear();
+	m_pgUpdatedId = m_pg->getUpdatedFiles(m_oriAllFiles, preId, operations);
 	
 	int preCmpId = m_cmpPGUpdatedId;
-	m_cmpPGUpdatedId = m_cmpToPG->getAllFiles(m_cmpToAllFiles, preCmpId);
+	m_cmpPGUpdatedId = m_cmpToPG->getUpdatedFiles(m_cmpToAllFiles, preCmpId, operations);
 	
 	if (preId == m_pgUpdatedId && preCmpId == m_cmpPGUpdatedId)
 	{
@@ -521,7 +527,7 @@ void MoreFilesDisplayer::prepareData()
 	std::vector<FileInfo*> vec;
 	vec.clear();
 
-	std::map<DWORDLONG, FileInfo*>::const_iterator it = m_oriAllFiles.begin();
+	FilesMapType::const_iterator it = m_oriAllFiles.begin();
 	FileInfo* p = 0;
 	while (m_oriAllFiles.end() != it)
 	{
@@ -600,7 +606,7 @@ void MoreFilesDisplayer::prepareData()
 		}
 		if (!bSame)
 		{
-			m_allFiles[pf->FileRefNo] = pf;
+			m_allFiles[pf->uuid] = pf;
 		}
 		++i;
 	}

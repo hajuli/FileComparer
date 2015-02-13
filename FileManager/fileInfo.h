@@ -8,12 +8,13 @@
 #include "targetver.h"
 #include "superList.h"
 #include <string>
+#include <map>
 
 
 class FileInfo : public IListItem
 {
 public:
-	LONGLONG	uuid;
+	LONGLONG	uuid;	// using uuid, 不同磁盘分区的FileRefNo可能一样， 经过验证， 很多是一样的。 所以使用uuid来区分。
     DWORDLONG	FileRefNo;
     DWORDLONG	ParentRefNo;
     DWORD		FileAttributes;
@@ -56,3 +57,5 @@ public:
 private:
 	static LONGLONG global_uuid;
 };
+
+typedef std::map<LONGLONG, FileInfo*> FilesMapType;	//using uuid or FileRefNo as key. 

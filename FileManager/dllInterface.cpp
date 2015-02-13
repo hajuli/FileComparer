@@ -17,7 +17,49 @@ void myAssertFail()
 	int i = 0;
 	int j = 10 / i;
 	printf("in myAssertFail\n");
+	printStackTrace();
 }
+
+//==========================
+#include <process.h>
+#include <iostream>
+#include <Windows.h>
+#include "dbghelp.h"
+
+#define TRACE_MAX_STACK_FRAMES 1024
+#define TRACE_MAX_FUNCTION_NAME_LENGTH 1024
+
+int printStackTrace()
+{
+    void *stack[TRACE_MAX_STACK_FRAMES];
+    HANDLE process = GetCurrentProcess();
+    SymInitialize(process, NULL, TRUE);
+    WORD numberOfFrames = CaptureStackBackTrace(0, TRACE_MAX_STACK_FRAMES, stack, NULL);
+    SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO)+(TRACE_MAX_FUNCTION_NAME_LENGTH - 1) * sizeof(TCHAR));
+    symbol->MaxNameLen = TRACE_MAX_FUNCTION_NAME_LENGTH;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    DWORD displacement;
+    IMAGEHLP_LINE64 *line = (IMAGEHLP_LINE64 *)malloc(sizeof(IMAGEHLP_LINE64));
+    line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+    for (int i = 0; i < numberOfFrames; i++)
+    {
+        DWORD64 address = (DWORD64)(stack[i]);
+        SymFromAddr(process, address, NULL, symbol);
+        if (SymGetLineFromAddr64(process, address, &displacement, line))
+        {
+            printf("\t%d at %s in %s: line: %lu: address: 0x%0X\n", numberOfFrames - i -1, symbol->Name, line->FileName, line->LineNumber, symbol->Address);
+        }
+        else
+        {
+            printf("\tSymGetLineFromAddr64 returned error code %lu.\n", GetLastError());
+            printf("\t%d at %s, address 0x%0X.\n", numberOfFrames - i - 1, symbol->Name, symbol->Address);
+        }
+    }
+    return 0;
+}
+//ref: https://msdn.microsoft.com/en-us/library/windows/desktop/bb204633(v=vs.85).aspx
+//ref: http://stackoverflow.com/questions/22467604/how-can-you-use-capturestackbacktrace-to-capture-the-exception-stack-not-the-ca
+//==========================
 
 int parseMsg(const char* const msgValue, MessageInfo& msgInfo)
 {
@@ -93,11 +135,6 @@ int DllInterface::parseCmd(const char* const msgType, const char* const msgValue
 	{
 		return m_mainProcessor->cancelLoadVolume(msg);
 	}
-	if (cmdUpdateSelectCondition == msgType)
-	{
-		msg.type = MSG_UpdateSelectCondition;
-		return m_mainProcessor->updateSelectCondition(msg);
-	}
 	if (cmdSortShowItems == msgType)
 	{
 		msg.type = MSG_SortFileList;
@@ -105,7 +142,11 @@ int DllInterface::parseCmd(const char* const msgType, const char* const msgValue
 		return 0;
 	}
 
-	if (cmdSetPartitionMulSel == msgType)
+	if (cmdUpdateSelectCondition == msgType)
+	{
+		msg.type = MSG_UpdateSelectCondition;
+	}
+	else if (cmdSetPartitionMulSel == msgType)
 	{
 		msg.type = MSG_SetPartitionGroup;
 	}

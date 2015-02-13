@@ -58,7 +58,7 @@ namespace FileComparer
             TextBox tb = ((TextBox)sender);
             string msg = GlobalValues.PN_ShowName + MessageTypes.MessageAttibuteSplitSign + m_name
                     + MessageTypes.MessageSplitSign
-                    + GlobalValues.PN_MessageValue + MessageTypes.MessageAttibuteSplitSign + tb.Text;
+                    + GlobalValues.PN_SelectCondition + MessageTypes.MessageAttibuteSplitSign + tb.Text;
             GlobalValues.ServiceHandle.sendMessage(GlobalValues.MSG_UpdateSelectCondition, msg);
         }
 

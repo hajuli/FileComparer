@@ -122,6 +122,12 @@ enum FileOperation
 	File_Rename,	//may change parent folder.
 };
 
+typedef struct
+{
+    FileOperation operation;
+    FileInfo* fi;
+}FileOperationRecord;
+
 class IDiskMonitorEvent
 {
 public:
@@ -138,7 +144,7 @@ public:
 
 	bool loadAllFiles();
 	int	 getAllFilesCount(){return m_allFiles.size();};
-	void getAllFiles(std::map<DWORDLONG, FileInfo*>& allFiles);
+	void getAllFiles(FilesMapType& allFiles);
 	bool EnumUsnRecord( const char* drvname, DuLinkList & fileList);
 
 	static void loadAllVolumeIDs(std::vector<std::string>& ids); // item like: (C:) OS
@@ -156,7 +162,7 @@ private:
 	VolNTFSInfoNode m_volInfo;
 
 	DuLinkList	m_allFiles;
-	std::map<DWORDLONG, FileInfo*>	m_allFilesMap;
-
+	FilesMapType	m_allFilesMap;		//key is FileRefNo;
+	FilesMapType	m_deletedFilesMap;	//key is uuid;
 	IDiskMonitorEvent* m_eventHandler;
 };

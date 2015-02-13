@@ -13,7 +13,11 @@ void test_SortShowItems();
 void test_GetSameFiles();
 void test_GetMoreFiles();
 
+void test_InterlockedIncrement64();
+
 void getFiles();
+void printStack();
+int printStackTrace();
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -25,10 +29,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//test_SetPartitionMulSel();
 	//test_SetCurrentShow();
-	test_GetSameFiles();
+	test_UpdateSelectCondition();
+	//test_SortShowItems();
+	//test_GetSameFiles();
 	//test_GetMoreFiles();
 
 	//getFiles();
+
+	//test_InterlockedIncrement64();
 	
 	int y = getchar();
 	return 0;
@@ -116,15 +124,15 @@ void test_UpdateSelectCondition()
 	
 	msg = "ParttGroup=" + pg;
 	msg = msg + MessageSplitSign;
-	msg = msg + "Value=xxx(Q:)";
+	msg = msg + "Value=xxx(E:)";
 	postMessageToService("SetPartitionMulSel", msg.c_str());
 
 	Sleep(30000); //waiting for load.
 
 	msg = PN_ShowName + "=" + pg + UiName_AllFiles.c_str();
 	msg = msg + MessageSplitSign;
-	msg = msg + "Value=.ini";
-	postMessageToService("UpdateSelectCondition", msg.c_str());
+	msg = msg + PN_SelectCondition + "=xxxfff";
+	postMessageToService(cmdUpdateSelectCondition.c_str(), msg.c_str());
 	Sleep(2000);
 }
 void test_SortShowItems()
@@ -209,8 +217,8 @@ void test_GetMoreFiles()
 
 	msg = PN_ShowName + "=" + pg + PV_ShowType_MoreFiles;
 	msg = msg + MessageSplitSign;
-	msg = msg + "Value=.mp3";
-	postMessageToService("UpdateSelectCondition", msg.c_str());
+	msg = msg + PN_SelectCondition + "=.mp3";
+	postMessageToService(cmdUpdateSelectCondition.c_str(), msg.c_str());
 	Sleep(2000);
 
 	msg = PN_ShowName + "=" + pg + PV_ShowType_MoreFiles.c_str();
@@ -333,4 +341,55 @@ void getFiles()
 	}
 
 	CloseHandle(hVol);
+}
+
+void test_InterlockedIncrement64()
+{
+	LONGLONG value = 0xffffffffffffffff - 1;
+	ULONGLONG value3 = value;
+	LONGLONG value2 = value3;
+	LONGLONG* pvalue3 = (LONGLONG*)&value3;
+	
+	printf("%I64u, %I64x, %lld\n", value, value, value);
+	printf("%I64u, %I64x, %lld\n", value2, value2, value2);
+	printf("%I64u, %I64x, %lld\n", value3, value3, value3);
+	printf("\n");
+	value = InterlockedIncrement64(&value);
+	value2 = InterlockedIncrement64(&value2);
+	*pvalue3 = InterlockedIncrement64(pvalue3);
+
+	printf("%I64u, %I64x, %lld\n", value, value, value);
+	printf("%I64u, %I64x, %lld\n", value2, value2, value2);
+	printf("%I64u, %I64x, %lld\n", value3, value3, value3);
+	
+}
+
+#include <process.h>
+#include <iostream>
+#include <Windows.h>
+#include "dbghelp.h"
+
+void printStack( void )
+{
+     unsigned int   i;
+     void         * stack[ 100 ];
+     unsigned short frames;
+     SYMBOL_INFO  * symbol;
+     HANDLE         process;
+
+     process = GetCurrentProcess();
+     SymInitialize( process, NULL, TRUE );
+     frames               = CaptureStackBackTrace( 0, 100, stack, NULL );
+     symbol               = ( SYMBOL_INFO * )calloc( sizeof( SYMBOL_INFO ) + 256 * sizeof( char ), 1 );
+     symbol->MaxNameLen   = 255;
+     symbol->SizeOfStruct = sizeof( SYMBOL_INFO );
+
+     for( i = 0; i < frames; i++ )
+     {
+         SymFromAddr( process, ( DWORD64 )( stack[ i ] ), 0, symbol );
+
+         printf( "%i: %s - 0x%0X\n", frames - i - 1, symbol->Name, symbol->Address );
+     }
+
+     free( symbol );
 }

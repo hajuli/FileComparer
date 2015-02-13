@@ -27,7 +27,6 @@ public:
 	void setPartitionGroup(MessageInfo msg);
 	int cancelLoadVolume(MessageInfo msg);
 	int setCurrentShow(MessageInfo msg);
-	int updateSelectCondition(MessageInfo msg);
 	int showFileList(MessageInfo msg);
 	int sortFileList(MessageInfo msg);
 
@@ -37,7 +36,9 @@ public:
 private:
 	virtual int svc();
 	int addNextMessage(MessageInfo msg);
+	void mergeMsgValues(MessageInfo& msg);
 
+	int updateSelectCondition(MessageInfo msg);
 	void loadVolumeFiles(std::string pgName, std::string volume);
 	void createDisplayer(std::string name);
 	int getSameFileAllPaths(MessageInfo msg);

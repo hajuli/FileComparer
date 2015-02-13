@@ -60,9 +60,9 @@ protected:
 	CallBackToOwner			m_notifyFunc;
 
 	PartitionGroup*			m_pg;
-	std::map<DWORDLONG, FileInfo*>	m_allFiles;
+	FilesMapType	m_allFiles;
 	std::vector<FileInfo*>		m_selectedFiles;
-	std::map<LONGLONG, bool>	m_showedUuids;
+	FilesMapType				m_showedFiles;
 };
 
 class AllFilesDisplayer : public FilesDisplayer
@@ -105,6 +105,6 @@ public:
 private:
 	int						m_cmpPGUpdatedId;
 	PartitionGroup*			m_cmpToPG;
-	std::map<DWORDLONG, FileInfo*>	m_oriAllFiles;
-	std::map<DWORDLONG, FileInfo*>	m_cmpToAllFiles;
+	FilesMapType	m_oriAllFiles;
+	FilesMapType	m_cmpToAllFiles;
 };

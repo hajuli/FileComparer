@@ -17,6 +17,7 @@
 #include "ace/ace.h"
 #include "ace/singleton.h"
 
+#define SHOW_FILE_ITEM_NUM 100
 
 static const std::string VolumeIDsSeparator	= "__###__";
 static const std::string MessageSplitSign	= ",..,";
@@ -39,6 +40,7 @@ static const std::string PN_PartitionGroup		= "ParttGroup";
 static const std::string PN_ShowName			= "ShowName";	//need be unique.
 static const std::string PN_ShowType			= "ShowType";	//[AllFiles, SameFiles, MoreFiles]
 static const std::string PN_CmpToParttGroup		= "CmpToParttGroup";
+static const std::string PN_SelectCondition		= "SelectCondition";
 
 //msg para values.
 static const std::string PV_ShowType_AllFiles	= "AllFiles";
@@ -78,14 +80,12 @@ enum MessageTypes{
 	MSG_SortFileList,			//PN_ShowName, PN_MessageValue, 
 	MSG_ShowMoreItems,			//PN_ShowName,
 	MSG_GetSameFileAllPaths,	//PN_ShowName, PN_MessageValue,
-	MSG_SetLoadVolume,
-	MSG_FindSameFile,
-	MSG_UpdateSameFilesSelectCondition,
 	MSG_MaxSize,
 };
 
 
 void myAssertFail();
+int  printStackTrace();
 
 struct MessageInfo
 {
@@ -116,6 +116,49 @@ struct MessageInfo
 			ret = true;
 		}
 		return ret;
+	}
+	//simplely update exist values and add new values.
+	bool mergeMsgValues(MessageInfo& msg)
+	{
+		std::map<std::string, std::string>::iterator it = msg.paras.begin();
+		while (msg.paras.end() != it)
+		{
+			paras[it->first] = it->second;
+			++it;
+		}
+		return true;
+	}
+	void print()
+	{
+		std::string typeStr = "MSG_None";
+		switch (type)
+		{
+		case MSG_SetPartitionGroup:
+			typeStr = "MSG_SetPartitionGroup";
+			break;
+		case MSG_SetCurrentShow:
+			typeStr = "MSG_SetCurrentShow";
+			break;
+		case MSG_ShowFileList:
+			typeStr = "MSG_ShowFileList";
+			break;
+		case MSG_UpdateSelectCondition:
+			typeStr = "MSG_UpdateSelectCondition";
+			break;
+		case MSG_SortFileList:
+			typeStr = "MSG_SortFileList";
+			break;
+		case MSG_ShowMoreItems:
+			typeStr = "MSG_ShowMoreItems";
+			break;
+		case MSG_GetSameFileAllPaths:
+			typeStr = "MSG_GetSameFileAllPaths";
+			break;
+		case MSG_MaxSize:
+			typeStr = "MSG_MaxSize";
+			break;
+		}
+		printf("MessageInfo type:%s, para size:%d\n", typeStr.c_str(), paras.size());
 	}
 };
 //============================================================================
