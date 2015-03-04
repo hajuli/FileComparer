@@ -143,9 +143,9 @@ public:
 	~DiskMonitor();
 
 	bool loadAllFiles();
-	int	 getAllFilesCount(){return m_allFiles.size();};
+	int	 getAllFilesCount(){return m_allFilesMap.size();};
 	void getAllFiles(FilesMapType& allFiles);
-	bool EnumUsnRecord( const char* drvname, DuLinkList & fileList);
+	bool EnumUsnRecord( const char* drvname);
 
 	static void loadAllVolumeIDs(std::vector<std::string>& ids); // item like: (C:) OS
 
@@ -154,14 +154,14 @@ public:
 
 private:
 	int svc();
-	void constructFileFullPath(DuLinkList& files);
+	void constructFilesLayerStructure();
 
 	USN			m_startUsn;
 	DWORDLONG	m_UsnJournalID;
 	std::string m_diskName;
 	VolNTFSInfoNode m_volInfo;
 
-	DuLinkList	m_allFiles;
+	//DuLinkList	m_allFiles;
 	FilesMapType	m_allFilesMap;		//key is FileRefNo;
 	FilesMapType	m_deletedFilesMap;	//key is uuid;
 	IDiskMonitorEvent* m_eventHandler;

@@ -124,14 +124,14 @@ void test_UpdateSelectCondition()
 	
 	msg = "ParttGroup=" + pg;
 	msg = msg + MessageSplitSign;
-	msg = msg + "Value=xxx(E:)";
+	msg = msg + "Value=xxx(Q:)";
 	postMessageToService("SetPartitionMulSel", msg.c_str());
 
 	Sleep(30000); //waiting for load.
 
 	msg = PN_ShowName + "=" + pg + UiName_AllFiles.c_str();
 	msg = msg + MessageSplitSign;
-	msg = msg + PN_SelectCondition + "=xxxfff";
+	msg = msg + PN_SelectCondition + "=a";
 	postMessageToService(cmdUpdateSelectCondition.c_str(), msg.c_str());
 	Sleep(2000);
 }

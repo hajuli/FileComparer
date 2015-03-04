@@ -43,59 +43,44 @@ m_diskName(volume),
 m_startUsn(0),
 m_eventHandler(eventHandler)
 {
-	m_allFiles.cleanUp();
 	m_allFilesMap.clear();
 	m_deletedFilesMap.clear();
 }
 
 DiskMonitor::~DiskMonitor()
 {
-	FileInfo* p = (FileInfo*)m_allFiles.pop();
-	while (p)
+	FilesMapType::const_iterator it = m_allFilesMap.begin();
+	while (m_allFilesMap.end() != it)
 	{
-		delete p;
-		p = (FileInfo*)m_allFiles.pop();
+		delete it->second;
+		++it;
 	}
-	m_allFiles.cleanUp();
+	m_allFilesMap.clear();
 }
 
 bool DiskMonitor::loadAllFiles()
 {
-	bool enumed = EnumUsnRecord(m_diskName.c_str(), m_allFiles);
+	bool enumed = EnumUsnRecord(m_diskName.c_str());
 	if (enumed)
 	{
-		constructFileFullPath(m_allFiles);
+		constructFilesLayerStructure();
 	}
 	return enumed;
 }
 
-void DiskMonitor::constructFileFullPath(DuLinkList& files)
+void DiskMonitor::constructFilesLayerStructure()
 {
-	m_allFilesMap.clear();
-	FileInfo* p = (FileInfo*)files.head();
-	while (p)
-	{
-		if (m_allFilesMap.end() != m_allFilesMap.find(p->FileRefNo))
-		{
-			FileInfo* tmp = m_allFilesMap[p->FileRefNo];
-			myAssertFail();
-			std::string name = tmp->Name;
-		}
-		m_allFilesMap[p->FileRefNo] = p;
-		p = (FileInfo*)files.next(p);
-	}
-
 	FileInfo* stack[64];
 	FilesMapType::const_iterator it;
 	int stackCount = 0;
 	FileInfo* cur = 0;
 	FileInfo* par = 0;
 
-	p = (FileInfo*)files.head();
-	while (p)
+	FilesMapType::const_iterator allIt = m_allFilesMap.begin();
+	while (m_allFilesMap.end() != allIt)
 	{
-		cur = p;
-		p = (FileInfo*)files.next(p);
+		cur = allIt->second;
+		++allIt;
 		if (cur->pathSetted)
 		{
 			continue;
@@ -119,6 +104,7 @@ void DiskMonitor::constructFileFullPath(DuLinkList& files)
 					cur->fullPath = par->fullPath + "\\" + cur->Name;
 					cur->pathSetted = true;
 					--stackCount;
+					par->children.InsertItem(cur);
 				}
 				else
 				{
@@ -131,15 +117,17 @@ void DiskMonitor::constructFileFullPath(DuLinkList& files)
 
 void DiskMonitor::getAllFiles(FilesMapType& allFiles)
 {
-	FileInfo* p = (FileInfo*)m_allFiles.head();
-	while (p)
+	FileInfo* p = 0;
+	FilesMapType::const_iterator it = m_allFilesMap.begin();
+	while (m_allFilesMap.end() != it)
 	{
+		p = it->second;
+		++it;
 		if (allFiles.end() != allFiles.find(p->uuid))
 		{
 			myAssertFail();
 		}
 		allFiles[p->uuid] = p;
-		p = (FileInfo*)m_allFiles.next(p);
 	}
 }
 
@@ -207,8 +195,13 @@ int DiskMonitor::svc()
 		printf( "Journal ID: %I64x\n", ReadData.UsnJournalID );
 		printf( "StartUsn: %I64x\n\n", ReadData.StartUsn );
 
-		for(int I=0; I<=1000; I++)
+		while (m_bRunning)
 		{
+			if(false == m_bRunning)
+			{
+				break;
+			}
+
 			memset( Buffer, 0, BUF_LEN );
 
 			if( !DeviceIoControl( hVol, FSCTL_READ_USN_JOURNAL, &ReadData, sizeof(ReadData), &Buffer, BUF_LEN, &dwBytes, NULL) )
@@ -230,41 +223,50 @@ int DiskMonitor::svc()
 				
 				FileInfo* fi = new FileInfo();
 				setUsnRecord(UsnRecord, *fi);
-				if (m_allFilesMap.end() == m_allFilesMap.find(fi->ParentRefNo))
+				File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
+				
+				FilesMapType::const_iterator parentIt = m_allFilesMap.find(fi->ParentRefNo);
+				if (m_allFilesMap.end() == parentIt)
 				{
-					//root dir
-					//myAssertFail();
-					fi->fullPath = m_diskName + "\\" + fi->Name;
+					fi->fullPath = m_diskName + "\\" + fi->Name;	//root dir;
 				}
 				else
 				{
 					fi->fullPath = m_allFilesMap[fi->ParentRefNo]->fullPath + "\\" + fi->Name;
 				}
-				File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
-
 
 				if (USN_REASON_FILE_CREATE & UsnRecord->Reason)
 				{
-					m_allFiles.InsertItem( fi );
 					m_allFilesMap[fi->FileRefNo] = fi;
+					if (m_allFilesMap.end() != parentIt)
+					{
+						parentIt->second->children.InsertItem(fi);
+					}
 					m_eventHandler->notifyFilesChange(File_Create, m_diskName, fi);
 				}
 				else if (USN_REASON_FILE_DELETE & UsnRecord->Reason)
 				{
 					FileInfo* oldFile = m_allFilesMap[fi->FileRefNo];	// maybe judge first.
-					m_allFiles.removeItem(oldFile);
 					m_allFilesMap.erase(fi->FileRefNo);
-					m_deletedFilesMap[oldFile->uuid] = oldFile;		//move to this map.
+					if (m_allFilesMap.end() != parentIt)
+					{
+						parentIt->second->children.removeItem(oldFile);
+					}
+					m_deletedFilesMap[oldFile->uuid] = oldFile;		//save to this map.
 					m_eventHandler->notifyFilesChange(File_Delete, m_diskName, fi);
 				}
 				else if (USN_REASON_RENAME_NEW_NAME & UsnRecord->Reason)
 				{
 					FileInfo* oldFile = m_allFilesMap[fi->FileRefNo];	// maybe judge first.
-					m_allFiles.removeItem(oldFile);	//delete old file info. insert new. save new.
-					//delete oldFile;
+					fi->children = oldFile->children;	//just copy.
+					fi->updateChildFullPath();			//may be is a folder.
+					m_allFilesMap[fi->FileRefNo] = fi;	//replace with new one.
+					if (m_allFilesMap.end() != parentIt)
+					{
+						parentIt->second->children.removeItem(oldFile);
+						parentIt->second->children.InsertItem(fi);
+					}
 					m_deletedFilesMap[oldFile->uuid] = oldFile;
-					m_allFiles.InsertItem( fi );
-					m_allFilesMap[fi->FileRefNo] = fi;
 					m_eventHandler->notifyFilesChange(File_Delete, m_diskName, oldFile);
 					m_eventHandler->notifyFilesChange(File_Create, m_diskName, fi);
 				}
@@ -320,7 +322,7 @@ void DiskMonitor::loadAllVolumeIDs(std::vector<std::string>& ids)
 }
 
 // drvname with ':' ending, eg: "E:"
-bool DiskMonitor::EnumUsnRecord( const char* drvname, DuLinkList & fileList)
+bool DiskMonitor::EnumUsnRecord( const char* drvname)
 {
     bool ret = false;
 	int counts = 0;
@@ -382,9 +384,9 @@ bool DiskMonitor::EnumUsnRecord( const char* drvname, DuLinkList & fileList)
                             {
 								FileInfo* fi = new FileInfo();
 								setUsnRecord(UsnRecord, *fi);				
-								fi->fullPath = drvname;
 								File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
-                                fileList.InsertItem( fi );
+								fi->fullPath = drvname;	//just the begin part path.
+								m_allFilesMap[fi->FileRefNo] = fi;
                                 dwRetBytes -= UsnRecord->RecordLength;
                                 UsnRecord = (PUSN_RECORD)( (PCHAR)UsnRecord + UsnRecord->RecordLength );
 

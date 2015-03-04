@@ -26,6 +26,8 @@ public:
 	std::string NameUppered;
 	std::string fullPath;
 	bool		pathSetted;
+	
+	DuLinkList	children;
 
 	FileInfo();
 	
@@ -53,6 +55,19 @@ public:
 		}
 		sizeBuf[j] = ' ';	// add more space for good look.
 		return sizeBuf;
+	}
+	void updateChildFullPath()
+	{
+		FileInfo* p = (FileInfo*)children.head();
+		while (p)
+		{
+			p->fullPath = fullPath + "\\" + p->Name;
+			if (0 < p->children.size())
+			{
+				p->updateChildFullPath();
+			}
+			p = (FileInfo*)children.next(p);
+		}
 	}
 private:
 	static LONGLONG global_uuid;
