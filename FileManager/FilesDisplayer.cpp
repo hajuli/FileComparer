@@ -73,7 +73,7 @@ void FilesDisplayer::showDetail()
 			cDate.wYear, cDate.wMonth, cDate.wDay, cDate.wHour, cDate.wMinute, cDate.wSecond,
 			mDate.wYear, mDate.wMonth, mDate.wDay, mDate.wHour, mDate.wMinute, mDate.wSecond,
 			lwDate.wYear, lwDate.wMonth, lwDate.wDay, lwDate.wHour, lwDate.wMinute, lwDate.wSecond,
-			f.path.c_str()); 
+			f.fullPath.c_str()); 
 		m_notifyFunc(cmdFileListItemAdd.c_str(), buf);
 		m_showedFiles[f.uuid] = m_selectedFiles[i];
 	}
@@ -169,14 +169,14 @@ void FilesDisplayer::sortFileList(std::string s)
     {
         bool operator()( const FileInfo* a, const FileInfo* b ) const
         {
-            return a->path < b->path;
+            return a->fullPath < b->fullPath;
         }
     };
 	struct order_path_desc
     {
         bool operator()( const FileInfo* a, const FileInfo* b ) const
         {
-            return a->path > b->path;
+            return a->fullPath > b->fullPath;
         }
     };
 	struct order_createDate_asce
@@ -456,7 +456,7 @@ void SameFilesDisplayer::showDetail()
 			PN_ShowName.c_str(),
 			m_name.c_str(),
 			i,
-			sn->head->value->Name.c_str(), sn->count, sn->head->value->fileSizeAsString(), sn->head->value->path.c_str()); 
+			sn->head->value->Name.c_str(), sn->count, sn->head->value->fileSizeAsString(), sn->head->value->fullPath.c_str()); 
 		m_notifyFunc(cmdFileListItemAdd.c_str(), buf);
 	}
 	m_showedItemCount = i;
@@ -477,7 +477,7 @@ void SameFilesDisplayer::getSameFileAllPaths(std::string msg)
 		{
 			if (paths.length() > 0)
 				paths = paths + ";";
-			paths = paths + p->value->path;
+			paths = paths + p->value->fullPath;
 			p = p->next;
 		}
 		std::string msg = PN_ShowName + "=" + m_name + MessageSplitSign;

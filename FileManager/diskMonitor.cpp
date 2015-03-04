@@ -107,7 +107,7 @@ void DiskMonitor::constructFileFullPath(DuLinkList& files)
 			it = m_allFilesMap.find(cur->ParentRefNo);
 			if (m_allFilesMap.end() == it)
 			{
-				cur->path = cur->path + "\\" + cur->Name;
+				cur->fullPath = cur->fullPath + "\\" + cur->Name;
 				cur->pathSetted = true;
 				--stackCount;
 			}
@@ -116,7 +116,7 @@ void DiskMonitor::constructFileFullPath(DuLinkList& files)
 				par = it->second;
 				if (par->pathSetted)
 				{
-					cur->path = par->path + "\\" + cur->Name;
+					cur->fullPath = par->fullPath + "\\" + cur->Name;
 					cur->pathSetted = true;
 					--stackCount;
 				}
@@ -234,11 +234,11 @@ int DiskMonitor::svc()
 				{
 					//root dir
 					//myAssertFail();
-					fi->path = m_diskName + "\\" + fi->Name;
+					fi->fullPath = m_diskName + "\\" + fi->Name;
 				}
 				else
 				{
-					fi->path = m_allFilesMap[fi->ParentRefNo]->path + "\\" + fi->Name;
+					fi->fullPath = m_allFilesMap[fi->ParentRefNo]->fullPath + "\\" + fi->Name;
 				}
 				File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
 
@@ -382,7 +382,7 @@ bool DiskMonitor::EnumUsnRecord( const char* drvname, DuLinkList & fileList)
                             {
 								FileInfo* fi = new FileInfo();
 								setUsnRecord(UsnRecord, *fi);				
-								fi->path = drvname;
+								fi->fullPath = drvname;
 								File_Info_by_NTFS(hVol, fi->FileRefNo, m_volInfo, *fi);
                                 fileList.InsertItem( fi );
                                 dwRetBytes -= UsnRecord->RecordLength;

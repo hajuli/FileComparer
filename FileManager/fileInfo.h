@@ -24,7 +24,7 @@ public:
 	unsigned int	fileSize;
 	std::string Name;
 	std::string NameUppered;
-	std::string path;
+	std::string fullPath;
 	bool		pathSetted;
 
 	FileInfo();
